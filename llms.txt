@@ -1,0 +1,1244 @@
+# JustCode (.jc) — reference for LLMs and coding agents
+
+JustCode compiles to JSON code modules for the JustMC Minecraft server (Creative+ block coding).
+Compiler: JMVCC (`jmvcc`). This file is the syntax + pitfalls cheat sheet; the full API is in
+`docs/signatures.txt` (every action/value/event, one per line, ~30k tokens) — search it instead
+of guessing names.
+
+## Agent loop
+```
+jmvcc search <words>          # actions, values, events AND item/block ids by name or meaning: jmvcc search gold pressure plate
+jmvcc sig <name>              # signature + description: player::title, value::health, item, %victim%
+jmvcc sig player_kill_player  # event: who takes part, placeholders, selectors, value:: filled in it; --full: whole enums
+jmvcc check main.jc --json    # ALL errors/warnings at once as JSON (file, line, column, code, message)
+jmvcc compile main.jc         # writes main.json; exit 1 on any error, nothing written
+jmvcc compile main.jc -w      # also warn about defaults filled in and arguments left empty (not where empty has a meaning)
+jmvcc trace main.jc           # compact listing of what it compiled to — check it matches your intent
+jmvcc decompile export.json -o main.jc   # module JSON (exported from the game, or compiled) → .jc; checks the round trip
+```
+Errors include "Возможно: ..." (did-you-mean) and the expected signature — apply them literally.
+Warnings ("Предупреждение") mean it compiled but you used an alias or something suspicious.
+
+Where things are: the compiler lives in `D:\jmcc`, docs in `D:\jmcc\docs` (this file, `recipes*.jc`,
+`signatures.txt`). Launchers: `D:\jmcc\jmvcc.cmd` for cmd/PowerShell, `/d/jmcc/jmvcc` (POSIX script) for Git Bash.
+For an event, `jmvcc sig` takes the bare name (`player_kill_player`). The form `event<player_kill_player>` works
+only quoted (`'event<player_kill_player>'`): `<` `>` are redirections in a shell, and `jmvcc.cmd` re-parses
+them through cmd.exe even when quoted — from Git Bash use `/d/jmcc/jmvcc` or the bare name.
+The old command name `jmcc` (`/d/jmcc/jmcc`, `D:\jmcc\jmcc.cmd`) still works as an alias of `jmvcc`.
+
+### Run it in the game (mod JMVCC Bridge, docs/bridge-api.md)
+When the player runs Minecraft with the JMVCC Bridge mod, you deploy and read server errors yourself:
+```
+jmvcc client status               # is the mod up, player on the server, remote control on, current session
+jmvcc client deploy main.jc       # compile → upload → /build, /dev, /module loadUrl, /play → wait 5 s →
+                                 # print errors, log(...) and module messages (player::message) of the new session; exit 1 on errors
+jmvcc client deploy main.jc --no-play --wait 10
+jmvcc client logs                 # current session without chat and server ads; --errors, --types log,system,chat, --all, --json
+jmvcc client logs --since 42      # only new events (the footer prints the last seq)
+jmvcc client send "/play"         # server command or chat message (never "!..." — global chat is blocked)
+jmvcc client control begin | end  # a series of key/click/command steps under ONE warning title for the player
+                                 # (auto-ends after 60 s without requests); reads (logs, vars, status) need none
+jmvcc client vars game [substr]   # game/save variables with values now (all pages of /env var list); --json
+jmvcc client send "/env var clear game <exact_name>"   # reset one variable; without a name clears the whole
+                                 # scope — never "clear save" without a name unless the user asked
+jmvcc client screen | click <slot> [--right] [--shift] | use | close | shot   # menus and screenshots
+jmvcc client button Возродиться     # press a button on a non-container screen (death, confirm); list: jmvcc client screen
+jmvcc client items [--all] [--json] # items in the player's backpack (slots 9-35) and open menu -> ready lines
+                                 # inline var ITEM_X = item_raw("H4sI...")  // player_head "Name"; --all adds hotbar/armor
+jmvcc client key forward sprint --ms 2000   # hold keys: forward back left right jump sneak sprint
+                                 # swap_offhand drop attack use inventory hotbar1..hotbar9 (default 100 ms)
+jmvcc client call give 5          # call an `rpc function` in the RUNNING code (deployed with --rpc), print its result
+jmvcc client get coins | set coins 100 | rpc-list   # read / write an `rpc game var`, list what is exposed
+```
+A runtime error line looks like `#17 19:01:52 error  <action>: <reason> @ x y z` — the action and reason
+come from the server; x y z is the code block. Fix the code, deploy again, read logs again.
+Exit codes: 1 error/failed deploy, 2 the mod is not running (ask the player to start the game with the mod),
+3 the player turned remote control off: write it to the user and ask to run `/j remote on` in chat.
+Git Bash only: it rewrites a leading `/` into a Windows path — write `"//build"` there or set `MSYS_NO_PATHCONV=1`.
+
+`log(...)` — debug print for you: `log("x = $x, top =", top)` → `player::message<all_players>("\u2063x = …")`.
+Args are joined by spaces, `$x`/`%var%` work as in player::message; a statement only (no value).
+The invisible U+2063 marker makes the mod log it as type `log`. Your own `function log(...)` wins over it.
+Every player sees log lines in chat: remove them when the code works.
+
+## Program shape
+```js
+import "utils"                     // other .jc file, imports must come first
+
+game var round = 0                 // global for the world (not saved)
+save var %player%_coins            // saved; %player% makes it per player; declare without value
+
+event<player_join> {               // events: jmvcc search <word> or docs/signatures.txt "## events"
+  player::message("Hi %player%")   // %player% = current player's name inside text
+  %player%_coins ??= 10            // default for a new player (only if not set yet)
+  if (%player%_coins == 0) {        // == != < > <= >= && || ! work in if (...) and repeat::while(...)
+    player::message("broke")
+  }
+}
+```
+Statements are separated by newline or `;` (after `}` none is needed: `if (x) { return 1 } return 0`). Top-level code (outside events) runs in `world_start`.
+
+## Variables
+- `var x = 1` — local to the current thread (event run); called functions SEE AND CHANGE it; dies when
+  that code finishes. `game var` — whole world, lost on world restart. `save var` — whole world, survives restarts.
+- `line var x = 1` — lives only in the current code line (the event/function body it is in); NOT passed to
+  called functions; survives `code::wait` inside its line. Use it for scratch values; use `var` when a function must see the value.
+- A variable never assigned is the NUMBER `0` (also `0` in text) — not an empty list/map/location.
+- `inline var N = 5` — compile-time constant.
+- Names may contain placeholders: `save var %player%_kills`. Backticks for any name: ``var `a b ${i}` = 1``.
+- A backtick (or placeholder) name used outside its declaration must itself be declared — the keyword
+  decides the scope (`save var` saved, `game var` world, `var` local); otherwise `unknown-identifier`.
+  Example, +1 saved win for a player whose name is in `w` (e.g. from a world loop, no target):
+  ``line var w = alive[0]; save var `${w}_wins`; `${w}_wins` += 1`` — the name resolves at runtime to
+  `Steve_wins`, the SAME storage as `%player%_wins` for Steve (and as `%killer%_wins` when Steve is the killer).
+- `var x` (no value) declares without emitting code — use it for variables set elsewhere.
+- Several at once: `var a, b = 0, c`, `game var x, y = 1`, `save var %player%_a, %player%_b`, `line var i = 0, n` —
+  exactly the same as one declaration per line.
+- `game`/`save` declarations are visible in the whole file (order does not matter); repeating a
+  declaration without a value is allowed.
+- A `save var` with a value at top level is re-set on EVERY world start (the compiler warns). For a
+  default use `x ??= value` — it assigns only if the variable does not exist yet:
+  `save var %player%_coins` + `event<player_join> { %player%_coins ??= 0 }`.
+- A plain `var` outside events belongs to `world_start` only and is empty in other events (warning) —
+  use `game var` for shared state.
+
+## Enums and structs (compile-time only: the JSON is exactly the hand-written code)
+- A struct DECLARATION does NOT apply defaults: call `x = Run()` (game state, e.g. in player_join) or
+  `x ??= Profile()` (save state). The compiler warns (`struct-no-init`) if neither appears in the file.
+- `enum Phase { LOBBY, GAME, END }` — numbers 0, 1, 2 (`GAME = 5` sets a value, the next is +1). Members
+  UPPERCASE (`game`, `save`, `if`... are keywords). `Phase.GAME` is a number literal everywhere (if,
+  arguments, factories `item("x", Slot.FOOD)`, `inline var`, parameter defaults). A misspelled member is a
+  compile error. Prefer enums to magic numbers and phase texts: `state == Phase.GAME` with -O is ≈1.5,
+  `state == "game"` ≈8. Never-set variable = 0 = the first member.
+- `game var state: Phase = Phase.LOBBY`, `function f(p: Phase)` — `: Type` gives compile checks only
+  (member of another enum, number that is no member, text = error); `state += 1` / arithmetic stay unchecked.
+  A saved enum (`save var x: Phase`) — give every member an explicit `= N` (the order becomes save data).
+- Name for output: `Phase.name(Phase.GAME)` → "GAME" (free); `Phase.name(state)` / `state.name()` → a
+  temp list + `l[v]` (≈9: list-argument actions are costly); for repeated use `game var NAMES = Phase.names`
+  once, then `NAMES[state]` (`names` is indexed by the value itself; holes are "?"). `"${state}"` prints the
+  NUMBER. Player-facing text: labels `enum Phase { LOBBY "&eЛобби", GAME "&aИгра" }` + `Phase.label(x)` /
+  `Phase.labels`. `Phase.count` — number of members. Your enums are not action enums: `merging = "SPACES"` stays text.
+- `struct Run { phase = Phase.LOBBY, hp = 20, kills = 0, owner }` — fields; defaults are constants; `owner`
+  (no default) is never touched by `Run()`/`??=`; `phase: Phase` types a field without a default.
+  An instance is plain variables `<instance>_<field>`: `game var %player%: Run` → `%player%_hp`,
+  `%player%_kills`… per player; `game var round = Run()` → `round_hp`… (set in world_start).
+  `%player%.hp` IS `%player%_hp` (old and new forms mix); `%killer%.kills` is the killer's copy (no extra declaration).
+  Name-keyed (`%player%`, `%killer%`, `%victim%`...) and UUID-keyed (`%uuid%`, `%player_uuid%`, `%killer_uuid%`...)
+  instances are different variables: with `save var %uuid%: Profile` write `%killer_uuid%.coins`, not
+  `%killer%.coins` (compile error `struct-key-mismatch` with the fix). `%player% = Profile()` on a SAVE instance in
+  player_join wipes progress on every join (warning `save-reinit`) — use `??=`.
+- `x = Run()` sets every field that has a default (in field order), `x = Run(hp = 30)` overrides one (named
+  only), `x ??= Profile()` sets only fields that do not exist yet (one check per field: a field added later
+  reaches old players), `x = y` copies field by field. `x.hp += 1`, `x.items[0]`, `x.hp++`, `"${x.hp}"` work as on
+  any variable. `x = Run(kills = x.hp)` is an error (hp was already reset above — read it first).
+- Save + game state of a player under one name: `save var %player%: Profile` + `game var %player%: Run`
+  (field names must differ; `x = y` copy is then an error — copy fields one by one).
+- Another player's instance by name (world loop, `line var w`): declare it in that function/lambda before use —
+  ``repeat::for_each_in_list(value::all_players_names) { i, w -> game var `${w}`: Run; `${w}` = Run() }``;
+  ``save var `${w}`: Profile; `${w}`.wins += 1``. Per team/arena: numbered instances ``game var `team${i}`: Team``.
+- An instance is not a value: no `"$x"` (write `"${x.hp}"`), no `x == y`, no lists of structs, no `T()` outside
+  `=` / `??=`, no struct parameters (a function called from a player event already sees that player's
+  `%player%.hp`; from a world loop without target `%player%` is empty). No inheritance, methods, nesting.
+
+## Values
+- Numbers `1`, `-2.5`. Text `"a"` or `'a'`; escapes `\n \t \" \' \\ \$`.
+- Interpolation: `"$name"`, `"${expr}"`. A bare `$word` must be a declared variable; write `\$` for a literal `$`.
+- Text placeholders (server fills them in at runtime; unknown ones are a compiler warning):
+  targets `%player% %entity% %victim% %damager% %shooter% %killer% %selected% %display_name%`, each also `_uuid`
+  (`%uuid%` = `%entity_uuid%`); `%space% %empty%`; `%player_amount%` (in world) `%online%` (server)
+  `%entity_count% %damage% %random%` (0..1) `%random_uuid% %time%` (ISO-8601) `%worlds%`.
+  Functions without closing %: `%var(x)` `%length(list)` `%index(list, i)` `%entry(map, key)`, each with
+  `_local/_save/_line` for other scopes; `%val(value_id)`, `%math(...)`. `"$x"` already compiles to these.
+  `jmvcc sig %victim%` explains one. Inside `${...}` goes a JustCode expression, not a placeholder:
+  `"${x}"` or `"%var(x)"`, never `"${%var(x)}"`. Comparing a game value with a misspelled text
+  (`value::event_interaction == "phisical"`, a block id that does not exist) is a compiler warning.
+- Booleans `true`/`false` (only for boolean arguments).
+- Lists `[1, 2, 3]`; read `l[0]`, write `l[0] = 5`, `l[i] += 1`. Maps: create first
+  `m = variable::create_map_from_values([], [])` (save/game: `m ??= ...`), then `m["k"] = 5`, `var v = m["k"]`
+  (missing key / index out of range → 0, also for `== 0`), `m[k] += 1`. No map literals. `m[k]` / `m[k] = v` compile to the cheap single-key actions
+  (`get_map_value_single` ≈1.2, `put_map_value` ≈1.8 — a new key is added; on a non-map both are a server error).
+  `x[k]` is a MAP when code above made or used x as a map (create_map*, sort_any_map, `x["k"] = ...`, x passed
+  as the `map` of any variable:: action) or k is a text (`"k"`, `"%player%"`, a var set to a text, `value::uuid`);
+  or x is a parameter typed `m: map`;
+  otherwise a LIST (k a number; nothing known about x and k: a list plus a warning). A text index on a known list,
+  or a key that is neither number nor text on an unknown x, is a compile error — create the map first
+  (or use `m.get(k)` / `m.set(k, v)` on a map created above).
+- Nested: `var c = grid[y][x]`, `grid[y][x] = 1`, `m["row"][0] += 1`, `l[2]["name"]`, `m.keys()[0]`. Lists
+  and maps are values (copied on assignment): the inner one is read into a temp, changed, and written back.
+  An in-place method on an item as its own statement is written back too: `grid[y].append(5)`,
+  `l[0].increment(1)`, `l[i].sort_any_list()`; used as a value (`var s = l[0].sort_any_list()`) it is a copy.
+  The result of an action or function is a copy: `m.keys()[0] = 5` / `f()[0] = 5` is an error —
+  `var keys = m.keys(); keys[0] = 5`. For game/save the "code above" is file order: create the map in
+  an event placed ABOVE the handlers that index it (otherwise a warning).
+- Math: `+ - * / %` on numbers only (`"a" + b` is an error — use interpolation). Functions (compile to %math):
+  abs sqrt cbrt sign ceil(x[,digits]) floor(x[,digits]) round(x[,digits]) pow(x,y) root(x,n) min max clamp(x,lo,hi)
+  wrap(x,lo,hi) sin cos (degrees) sinr cosr (radians) asin acos atan2(y,x). A declared function with the same
+  name (except the first 11) wins over the built-in.
+- `x += 1; x -= 1; x *= 2; x /= 2; x %= 3; x++; x--; x ??= 0` (`op=` also on items: `l[i] += 1`, `m["k"] -= 1`,
+  `grid[y][x] *= 2`; not `++` / `??=`).
+- Factories (arguments must be LITERALS, not variables):
+  `item("diamond_sword")`, `location(x, y, z, yaw, pitch)` (yaw defaults to 90!), `vector(x, y, z)`,
+  `sound("entity.player.levelup")`, `particle("flame")`, `potion("speed")`.
+  An `inline var` constant counts as a literal: `inline var NAME = "&bTop"` + `item("book", NAME)` is fine
+  (a `var`/`game var` is a type-mismatch error). `item(id, name, count, lore = [...])`: `&` codes in name and
+  lore are compiled into colored item text (`&aBread` → JSON name with color green; how it looks in a menu
+  is not checked on the server).
+- Game values: `value::health`, `value::location<killer_entity>` (see "## value" in signatures.txt).
+  Value selectors: current default default_entity killer_entity damager_entity victim_entity shooter_entity projectile last_entity.
+
+## Calling actions
+```js
+player::message(["a", "b"], merging = "SEPARATE_LINES") // positional, then named
+player::message("one value")                            // list args (type[N]) take [..] or one value
+player::message<all_players>("to everyone")             // <selector> picks the target (`jmvcc sig` lists them)
+code::wait(5, time_unit = "seconds")                    // enums are case-insensitive
+player::teleport(location(0, 64, 0), keep_rotation = false)
+var n = variable::length(list = scores)                 // actions shown as "var x = ..." return a value
+world::chunk_get_custom_tag(n, loc, "tag")             // same, older form: output variable first, alone on a line
+var len = scores.length()                               // same via dot: only variable:: actions with a receiver
+scores.sort()                                           // modifying action alone on a line updates the receiver
+```
+A query result must be used: `l.length()` alone on a line is an error. A condition alone on a
+line is an error (wrap it in `if`).
+Objects: `player entity world variable code select repeat value`. Names here are JMVCC names (next section).
+The server name of each action (shown in `jmvcc sig` as «на сервере: …») also works, with no warning and the
+same JSON. Full ids (`player_send_message`), ids without prefix (`send_title` → `player::title`),
+`game::` = `world::`, `if_player::` = `player::` work with a warning — use the name it prints.
+
+## JMVCC names (data/aliases.json; same JSON as the server name)
+`.sort/.reverse/.shuffle/.length/.contains/.index_of/.chunk/.slice/.get/.set/.remove` pick the list, map or text
+action by what the variable holds (known like for `x[k]`: created / used above in the code, also as a result:
+`var s = parts.join("-")` is text, `var t = value::display_name` is text; literals and `value::` by type).
+`x.get("k")` / `x.set("k", v)` with a TEXT key are the map actions, like `x["k"]`. A function parameter gets its
+kind from the type `function f(x: map)` or from ALL calls of the function (see Functions); a function result
+(`var r = mk(); r.length()`) from its `return`s. Still unknown (value from an event, no calls) → the list action
+plus a `kind-guessed` warning naming the exact map / text action; a known wrong kind (`m.contains(k)`,
+`t.sort()`, `l.clear()`, `l.has_key(0)`, `m.append(5)`, `t.keys()`) is a `kind-mismatch` error with the
+replacement. `variable::sort(m)` = `m.sort()` (the receiver is the first argument, changed in place);
+`variable::sort(map = m)` (receiver named) picks by the name.
+- Lists: `l.append(x)` (also `push`; a list value goes in as ONE element: [1,2].append([3,4]) → [1,2,[3,4]]),
+  `l.extend(other)`, `l.insert(i, x)`, `l.remove(x)` (by value), `l.remove_at(i)`, `l.get(i, default)`,
+  `l.set(i, x)`, `l.index_of(x)` (-1 if none), `if (l.contains(x))`, `if (l.is_empty())`, `l.length()` (also
+  `size`), `l.sort()`, `l.reverse()`, `l.shuffle()`, `l.unique()`, `l.flatten()`, `l.chunk(n)`, `l.join(", ")`,
+  `l.random()` (a random ELEMENT), `l.slice(a, b)` (from 0, end excluded like JS; outside the list, a > b or
+  negative is a server error `index_out_of_bounds`).
+- Maps: `m.get(k, default)`, `m.set(k, v)` (= `m[k] = v`), `m.remove(k)`, `if (m.has_key(k))`, `m.keys()`,
+  `m.values()`, `m.length()` (also `size`), `m.sort(...)`, `m.merge(other)` (same key: `other` wins), `m.clear()`.
+- Text: `t.length()`, `if (t.contains("a"))`, `if (t.starts_with("a"))` / `ends_with`, `t.index_of("a")` (from 0,
+  -1 if none), `t.split(",")`, `t.replace("a", "b")`, `t.regex_replace(...)`, `t.strip()`, `t.repeat(3)`,
+  `t.slice(a, b)` (from 0, end excluded; out of range is clamped: "abcdef".slice(2, 9) → "cdef"), `t.chunk(n)`,
+  `t.word_wrap(n)`, `t.parse_int()` (integers only), `t.get_char_at(i)` (from 0).
+- Numbers / vectors: `x.abs()`, `x.wrap(lo, hi)`, `a.lerp(b, t)`, `variable::rgb(r, g, b)` / `hsl` / `hsb`, `v.length()`
+  (needs v known as a vector), `v.dot(w)`, `v.cross(w)`, `v.reflect(w)`, `a.distance(b)` (locations).
+- Players / entities / world: `player::give_item`, `remove_item`, `give_potion_effect` (also `add_potion_effect`,
+  entity too), `has_permission`, `set_hunger`, `stop_using_item`, `finish_using_item`, `set_view_distance`,
+  `set_keep_inventory`, `menu_slot_equals`, `set_menu_id`; `entity::set_health`, `is_on_ground`, `is_near`,
+  `set_equipment`, `get_equipment`, `set_armor`; `world::spawn_entity`, `set_time`, `set_weather`, `set_gamerule`,
+  `set_difficulty`, `set_simulation_distance`, `set_redstone_power`, `set_block_growth`, `set_container_items`.
+- Code / loops / selection: `code::end_thread()`, `measure_time(t) { }`, `catch_error(e) { }`, `throw_error(id, msg)`,
+  `label("x") { }` (body runs), `do_not_run() { }` (body skipped), `isolated_selection(mode) { }` (selection
+  restored after), `request_transaction(...)`; `repeat::times(n) { i -> }`, `repeat::for_each_in_map(m) { k, v -> }`;
+  `select::player_by_condition(...)` / `entity_by_condition` / `add_*_by_condition` / `filter_by_condition`.
+Tempted to write X → write Y: `l.add(x)` → `l.append(x)` (`add` is a number sum); `t.trim()` → `t.strip()` or
+`t.slice(a, b)`; `t.to_number()` → `t.parse_int()`; `x.count()` → `x.length()`; `repeat::range(0, n)` →
+`repeat::on_range(0, n - 1)` (end INCLUDED); `variable::random([1, 10])` is "1 or 10" — a number in range is
+`variable::random_in_range(1, 10)`.
+
+Omitted arguments: enums get their FIRST value (or the `=X` shown in the signature), booleans get the
+value shown as `boolean=TRUE`/`boolean=FALSE`, everything else is left empty. Pass important arguments
+explicitly; `-w` lists every filled-in default (`implicit-default`) and every argument left empty
+(`empty-argument`, e.g. a missing `subtitle` or `amount`). Not reported, because empty has a meaning there:
+`play_sound` without `location` (heard by the player), `event_block_equals` without `locations` (checks the
+event block; still reported in events without one, e.g. `player_join`), `on_range` without `interval` (step 1).
+
+## Conditions
+```js
+if (a > 5) { ... } else if (a == 5) { ... } else { ... }
+if (value::health < 5 && !player::is_sneaking()) { ... }   // && || ! and ( ) combine anything
+if (x == "red" || x == "blue") { ... }             // == / != work for any type, < > <= >= for numbers
+if (player::is_sneaking()) { ... }                 // condition actions are marked [условие] in signatures
+if not (player::has_item(item("diamond"))) { ... } // same as if (!player::has_item(...))
+repeat::while(i < 10 && l[i] != 0) { i++ }         // re-checked every step, f() and l[i] too
+```
+`a < b` compiles to the same action as `a.less(b)` (`==` → equals, `!=` → not_equals, `<=` → less_or_equals, ...).
+`&&` nests ifs, so the right side is evaluated only when the left is true; `||` uses a temp variable.
+Comparisons are ONLY for conditions: `var ok = a > 5` is an error (set a variable inside an if instead).
+`a < b < c` is a syntax error — write `a < b && b < c`. `x ??= f()` calls f only when x is not set.
+`return` is a reserved word (not a variable name). Selectors still use `<>`:
+`player::message<all_players>(...)`, `value::health<killer_entity> < 5`.
+
+## Loops
+```js
+repeat::forever() { code::wait(20) }
+repeat::while(a.less(10)) { a++ }
+repeat::on_range(0, 10) { i -> player::message("$i") }
+repeat::for_each_in_list(scores) { index, value -> ... }
+```
+Inside a `repeat::` loop `break` leaves the loop and `continue` skips to the next iteration.
+Outside a loop `break` ends the whole event/function thread (early exit).
+
+## Errors and branching by value (`try` / `catch` / `throw` / `match`)
+```js
+try {
+  var part = l.slice(1, 9) // out of range: server error index_out_of_bounds, the try body stops here
+  give_reward(part)        // errors inside called functions are caught too (also after code::wait)
+} catch (e) {             // runs only when an error happened; e is text
+  log("failed: $e")       // server error → its id (expected_but_got, index_out_of_bounds, ...); throw → the message
+}
+// the code after try/catch always runs
+try { risky() }                       // no catch: ignore the error
+try { ... } catch { log("failed") }   // catch without a name
+if (hp < 0) { throw("hp < 0: $hp") }  // throw("message") / throw "message": stops the line, try catches it
+
+match (phase) {                       // x is evaluated once
+  Phase.LOBBY -> start_lobby()        // one statement or { block }
+  GAME, END -> { log("busy") }        // several values: one equals with a list; bare members work for an enum
+  else -> log("?")                    // optional; must be last
+}
+match (value::health) { 1, 2 -> log("low")
+  else -> log("ok") }                 // arms: new line, ; or , between them
+```
+- `try` compiles to `code::catch_error` (controller_exception) + a line var flag: ≈3 actions over the body (flag = 1,
+  the block, flag = 0, one `>` check; checking e itself would cost ≈6–7); `try` alone with no exits is just the block.
+  `return` in a function, `break` / `continue` of a loop and `return` / `break` that end an event (end_thread) work
+  inside try as outside. Nested try, try in loops and recursion
+  are correct. `throw` = `code::throw_error("throw", message, "ERROR")`; the id is shown nowhere (e and the log get the
+  message). `throw_error(..., "WARNING")` / `"FATAL"` only log, the code continues and catch does not see them.
+- Not caught: `code::end_thread()` / `break` outside a loop inside a FUNCTION called from try exits only the try
+  body and runs catch (e keeps its old value), the code after try goes on — warning `try-end-thread` at the call;
+  return a flag from the function and `return` / `break` in the try body itself. No `finally` (the code after the block runs anyway), no types `catch (e: T)`.
+- `match` = `if (x == a) { } else if (x == [b, c]) ...` exactly as hand-written; with `-O` a single-number arm becomes
+  number_in_range (≈1.5 instead of ≈8, x must be a number variable). Errors: duplicate values, `=>` (use `->`),
+  `_` / `default` (use `else`), a list `[1, 2]` (write `1, 2`), conditions (use if). On an enum without `else` the
+  compiler warns which members have no arm. No `switch` / `when` / `case`.
+- `match` is a statement, not an expression: `var x = match (...) { }` is a syntax error, a bare value in an arm
+  (`1 -> "one"`) is an error — assign in each arm: `1 -> label = "one"`. A bare value as a statement elsewhere
+  (`"a"`, `5`, `x`) does nothing: warning `bare-value`.
+- `try`, `catch`, `finally`, `throw`, `match` are keywords (not variable names); inside `( )` they stay argument names
+  (`variable::purge(["a"], match = "STARTS_WITH")`).
+
+## Functions and processes
+```js
+function give_kit(amount) { player::give_item(item("bread"), amount) }
+process spawn_wave() { ... }       // runs in parallel
+give_kit(3)
+```
+Threads die with their target: code in a player event, and a process started from it with `name()`
+(target = current player), stops MID-EXECUTION when the player leaves / the entity dies. A world-wide loop
+goes in top-level code (world_start) or `code::start_process("spawn_wave", target_mode = "NO_TARGET")`.
+A `repeat::forever()` in `player_join` is a per-player loop that ends when that player quits. BUT `/play` typed
+again while the world is already in play mode fires `player_join` again and the OLD loop keeps running (two loops →
+double coins/ticks; `world_start` does not re-fire; `/build` and a deploy stop all loops — verified, server-check-13).
+Guard a per-player loop with a generation token (verified):
+```
+game var %player%_loop
+event<player_join> {
+  %player%_loop = value::timestamp
+  line var my = %player%_loop
+  repeat::forever() {
+    code::wait(1, time_unit = "SECONDS")
+    if (%player%_loop != my) { code::stop_repeat() }   // a newer join took over
+    // ... per-player work
+  }
+}
+```
+A NO_TARGET loop outlives whatever it manages (a boss, a round): give it a generation token, see "Boss fight".
+
+Error isolation: a server error (wrong type, bad or guessed argument) stops the REST OF ITS CODE LINE — the
+actions after it, a `repeat::forever` later in that line, and everything in the functions the line calls (an
+error inside a called function stops the caller's line too). Other events and processes go on. (Verified: an
+error stops its line; an error inside a called function stops the caller's line too (server-check-8); `break` in
+a called function ends the caller's line. A started process is its own line — inferred, not checked.) So:
+- top-level code is ONE line (world_start): start a long-running world loop FIRST there, or put it in its own
+  line with `code::start_process("loop", target_mode = "NO_TARGET")`; before a loop keep only plain variable setup;
+- keep risky or unverified actions (item components, NBT, ray traces, guessed enum values) out of the loop's
+  line: run them in their own process (`code::start_process(...)`), so an error ends only that run.
+```js
+function sq(x) { return x * x }
+var a = sq(3) + sq(4)               // return value; works for functions declared below too
+function check(n) { if (n < 0) { return 0 } return n }   // return on EVERY path, or the old value leaks
+function is_top(n) { return n > 5 }                    // a condition returns 1/0; return true/false too
+if (is_top(score) && !is_top(other)) { ... }           // only yes/no functions work directly as a condition
+repeat::while(is_top(i) == 1) { ... }                  // in while compare explicitly (re-called every step)
+```
+Parameter types (optional): `function f(n: number, t: text, l: list, m: map, v: vector, p: location, i: item, s: Phase)`.
+A type picks the JMVCC name (`m.length()` → map size, `m[k]` → map) and a call with a clearly different kind is
+an error (`param-kind-mismatch`: `f([1, 2])` for `m: map`). No JSON, no runtime check. `string`/`int`/`array`/`dict`
+work with a warning; there is no `bool` (use `number`, 1/0). Without a type the compiler looks at EVERY call
+of `f` (the file and its imports, also through `g(y) { f(y) }` — a typed `f(m: map)` is checked that way too;
+`if (x.contains(v))` and `x.slice(0, 2).length()` on such a parameter work the same): one kind everywhere → that action, silently;
+different kinds → a runtime check `variable::is_type` (one check for 2 kinds, two for 3; adjacent calls on the
+same parameter share it) plus a `kind-mixed` warning — if the mix is a mistake, fix the call or add the type;
+a kind with no such action (`f("abc")` where f does `x.sort()`) is a `kind-mismatch` error at the call; no
+calls → list + `kind-guessed`. Types are only for parameters (`var x: list` is an error: a variable's kind is
+its value). Calls by text (`code::call_function("f")`) and loop values (`{ i, v -> v.length() }`) are not seen.
+`return` without a value just leaves the function; in an event it ends the event (like `break` outside a loop).
+Recursion whose result is used (`return fib(n - 1) + fib(n - 2)`) is wrong: all calls share locals (warning).
+Calls inside an expression run before it is computed: in `hits + bump()` the call happens first.
+A `process` cannot return a value. A function shares the caller's local variables (`var`): assigning
+`var x` inside changes the caller's `x` (parameters too; the compiler warns) — use `line var` for scratch
+values inside it. Passing a variable `f(coins)`: what f does to its parameter is copied back into `coins` — unless f itself (or a
+function it calls) writes `coins` directly (`=`, `+=`, append, any action output): then f's write wins (`game var hp; function hit(x) { hp = hp - 10 }; hit(hp)` → 90, verified).
+The compiler keeps every event / function / process as ONE code row, however long (the old 43-block limit is
+gone: the server accepted and ran flat event rows of 152 and 1002 blocks, and a 95-block function and 93-block process
+with nested if/else/repeat, early return and line var past block 43). Do not split code into functions just
+because it is long — a call costs actions and shares the caller's `var`s; use functions for reuse and readability.
+(`--max-line 43` on compile / check / trace / client deploy brings back the old splitting into helper functions
+`jmcc.fN`; you do not need it.) One source line can be several blocks: `||`, `??=` and every call inside a text
+(`"${l.length()}"`, `"${f(x)}"`) add blocks (temp variables, extra ifs) — each block is server work.
+
+## Standard library (`std::`)
+Built into the compiler; each call is ONE server action (no function is added to the module):
+```js
+var t = std::mmss(ms)                 // ms → "mm:ss", zero-padded: 75000 → "01:15" (hours dropped: 3725000 → "02:05")
+var h = std::hmmss(ms)                // ms → "H:mm:ss": 3725000 → "1:02:05"
+var p = std::time(ms, "m:ss.SSS")     // any pattern: H hours, mm minutes, ss seconds, SSS ms → "1:15.123"
+player::action_bar("${std::mmss(value::timestamp - start)}")   // works inside text too
+```
+Takes MILLISECONDS (seconds → `std::mmss(secs * 1000)`). ≈4× cheaper on the server than a hand-written mm:ss function.
+
+## Graceful stop (`std::session`, `event<jmvcc_stop>`)
+`/build` and a deploy kill every running thread AT ONCE (verified): a player in the middle of forging or a match
+loses it. Any game with long sessions (a craft with a wait, a round, a dungeon run, anything that took resources
+and gives them back later) wraps the START of each session and returns resources in `event<jmvcc_stop>`.
+The pattern is a flag: set it when you take, clear it when you give the result, and give only while it is set —
+then the refund and the reward never both happen:
+```js
+event<player_right_click> {
+  std::session("ковка") {           // entry of a NEW session: the click / event where it all begins
+    %player%_ore -= 3
+    %player%_forging = 1             // taken: from now on jmvcc_stop owes it back
+    code::wait(10, time_unit = "SECONDS")
+    if (%player%_forging == 1) {     // jmvcc_stop may have refunded it during the wait
+      %player%_forging = 0
+      player::give_items(item("diamond"), 1)
+    }
+  }
+}
+event<jmvcc_stop> {                  // one player (target = player): give back, save; NO code::wait
+  if (%player%_forging == 1) { %player%_ore += 3; %player%_forging = 0 }
+}
+```
+- `event<jmvcc_stop>` runs on EVERY quit, for players who were in no session, and can run twice for one player
+  (a stop, then `#jmvcc cancel`, then their quit): it must be idempotent — refund only under a flag, reset it.
+- While the world is stopping (`#jmvcc build`, below) a NEW `std::session` is refused: action bar "&cМир уходит на
+  стройку — новое начать нельзя" + `entity.villager.no`, the body is skipped, the code after the block runs. Started
+  sessions play out. Not blocked: a session nested in another, functions called from inside (they share `var`),
+  `event<jmvcc_stop>` and the functions it calls, and processes started from inside with `name()` or
+  `local_variables_mode = "COPY"` (verified: they get a copy of the caller's `var`). Inside a session
+  `code::start_process(...)` without a mode or with `"SHARE"` is a compiler warning: use `"COPY"`.
+- Mark only the ENTRY, not every function: functions and processes are called inside important tasks too.
+  Do not wrap a `repeat::forever()` world loop (the session would never end; the stop then waits for its timeout),
+  and start a long-lived game-loop process OUTSIDE a session: a process started inside counts as inside for its
+  whole life, so its own rounds would never be refused.
+- The open-session count is per owner: the player (`%uuid%`) in player events (also `mob_kill_player`,
+  `projectile_damage_player`, ...) and in all functions and processes, the entity (`value::uuid`) in `entity_*`
+  events, `"world"` in world code. A player's count is reset when they quit (their threads die mid-way), an
+  entity's in `entity_death`. A NO_TARGET process that works for a player and may outlive their quit:
+  `std::session("ковка", uuid) { ... }` — kept apart, a quit does not touch it (otherwise the stop may not wait for it).
+  In a NO_TARGET process `%uuid%` / `%player%` stay literal text and `value::uuid` is 0 (verified): pass the
+  player's uuid as an argument when the process needs it.
+- `return` / `break` / `continue` / `code::stop_repeat()` / `code::end_thread()` out of the body close the session
+  automatically. A called function that ends the thread or stops the caller's loop (`code::end_thread()`,
+  `code::stop_repeat()` outside its own loop) skips the close: compiler warning — return a flag and `return` /
+  `break` in the session body itself. A server error in the body (the line stops) or a thread killed from outside
+  leaves it counted (a player's until they quit, `"world"` until the world restarts); the stop then waits for its timeout.
+- `event<jmvcc_stop>` runs: when a player quits (for them, FIRST in your `player_quit`: it sees the player's state
+  before your quit code cleans it up; a server error in it stops your quit code too — keep it simple; whether items
+  can still be given there is NOT verified), and at the end of a graceful stop (for every online player). A plain
+  `/build` (and `client deploy`) runs it too: the server fires `player_quit` for every player first, then
+  `world_stop` in the same tick with no players left (verified) — so world-wide saves go in your own
+  `event<world_stop>`, per-player ones in `jmvcc_stop`. Once a graceful stop ran it, a quit does not run it again
+  (until the stop is cancelled). `code::wait` in it is a compile error (code after
+  wait in world_stop never runs, verified); a function with wait called from it is a warning. Several
+  `event<jmvcc_stop>` (e.g. in imports) all run.
+- Your own `player_chat` / `player_quit` / `world_stop` handlers keep working: the compiler puts its part at their
+  start. `#jmvcc ...` chat messages never reach any of your `player_chat` handlers.
+- Protocol (the bridge / `jmvcc client` speaks it; you rarely type it): `build [timeout_s]` (default 90), `cancel`,
+  `status` from a player with DEVELOPER or OWNER rights — the mod sends a custom click packet `jmvcc:cmd` with
+  data `{cmd:"build 30"}` (invisible; a world without the receiver just ignores it); typed by hand, the chat
+  message `#jmvcc build 30` works too and is cancelled (nobody sees it). Replies
+  are log lines to the asker only: `jmvcc:draining <s>`, then a boss bar countdown for everyone once a second, then
+  `jmvcc:ready-to-stop` + title "&aМожно /build" (all sessions done or timeout, `jmvcc_stop` finished for everyone —
+  up to 5 s after the count); `jmvcc:cancelled`; `jmvcc:status draining=<0|1> busy=<n>`. No `jmvcc:draining` within
+  3 s = an old module without graceful stop. The code never does `/build` itself. The world leaves the stop by
+  itself when the asker quits before `ready-to-stop`, or when no `/build` came within 60 s after it
+  (`jmvcc:cancelled` to the asker).
+- Cost: one `>` per session start (≈1) and 2×4 cheap actions for the count; in normal play nothing per tick (one
+  text check per chat message, one map write and one compare per quit).
+- Generated only when the module has `std::session` or `event<jmvcc_stop>`; other modules compile exactly as before.
+  Verified on the server (bench/server-check-26.jc, 2026-11-04): sessions, refusal while stopping, nested / function /
+  COPY / SHARE / explicit-owner processes pass and a mode-less process is refused, early exits close the count,
+  `jmvcc_stop` from the NO_TARGET drain process before `ready-to-stop`, `cancel`, the 60 s auto-cancel, `/build`
+  via quit, both transports, `jmvcc client stop` and `deploy --graceful`. NOT checked: the asker quitting
+  mid-stop, giving items in `player_quit`, a second player without rights.
+
+## Agent RPC (`rpc function`, `rpc game var`)
+Call functions and read / write variables of the code that is RUNNING in the world, without a redeploy (the
+state stays): a REPL / debugger for you. Mark what you may touch:
+```js
+rpc game var coins = 0               // also rpc save var x; only these are reachable by get / set
+rpc function give(n, extra = 1) {    // an ordinary function: the code calls it too
+  coins += n + extra
+  return coins
+}
+```
+```
+jmvcc client deploy main.jc --rpc    # dev build: WITHOUT --rpc the word rpc changes nothing (same JSON, no receiver)
+jmvcc client rpc-list                # function give(n, extra?) → значение / game var coins
+jmvcc client call give 5             # → 6 (prints the return value as JSON; null for a function without return)
+jmvcc client call greet Steve '[1,2]' '"5"'   # each arg: JSON if it parses, else text ("5" in quotes = text)
+jmvcc client call greet 5 --text     # all args as text, no JSON parsing
+jmvcc client call echo --file args.json   # args = a JSON list from a file: no quotes on the command line
+jmvcc client call give -- -5         # negative numbers after --
+jmvcc client get coins               # → 6
+jmvcc client set coins 100           # → 100 (value: JSON, else text; --text / --file value.json too)
+```
+- Windows PowerShell 5.1 DROPS `"` inside arguments of native programs: `'[1,"a"]'` arrives as `[1,a]`, `'"5"'`
+  as the number 5. Arguments that start with `[` / `{` but are not JSON are an error (not silently text); for
+  quoted JSON in PowerShell write `\"` (`'[1,\"a\"]'`, `'\"5\"'`), or use `--file`, or run from bash.
+- Release builds (`compile`, `client deploy` without `--rpc`) never carry RPC: deploy with `--rpc` only while
+  you debug. With `--rpc` and at least one `rpc` item the compiler adds the receiver; `compile/check/trace --rpc` too.
+- Only the world OWNER is served (`"%uuid%" == value::owner_uuid` and `has_privilege("OWNER")`); a packet from
+  anyone else is silently dropped. Only names marked `rpc` are reachable (a compiled if-chain, no call by text).
+- Every request carries this machine's key (`~/.jmvcc/rpc-key`, made on the first `--rpc` build and compiled
+  into the receiver): the owner clicking someone else's text with a custom `click_event` sends the same packet,
+  but without the key it calls nothing (`error bad key: redeploy with --rpc from this machine` — also what you
+  get after the key file changed). Deploy and call from the same machine.
+- `--max-line` / `JMVCC_MAX_LINE` never split the generated dispatcher (the server has no row limit).
+- The function runs in the owner's thread (target = the owner: `player::message` goes to them), args by position
+  (fewer is fine when the rest have defaults). It shares the caller's `var`s like any call. `code::wait` inside
+  is allowed: the reply comes when it returns (verified: 3 s wait → reply after 3 s; `--timeout <s>`, default 5).
+  No reply (exit 1, "нет ответа") = the world was deployed without `--rpc`, no such rpc, you are not the owner,
+  a server error stopped the line
+  (`jmvcc client logs --errors`), or the function ended the thread (`code::end_thread`, `break` outside a loop).
+- Errors (exit 1): `unknown function f`, `give takes 1..2 arguments (n, extra), got 3`, `unknown variable x`,
+  `set needs value`, `args must be a JSON list, got ...`, `bad key ...`, and a reply that is not a JSON list
+  (the server cut or changed the line). `rpc` goes only on `function` (not `process`: start it from an rpc
+  function) and on `game var` / `save var` with a plain name.
+- Values go through `variable::parse_json` / `variable::to_json` (verified, server-check-27): numbers come back as
+  floats (`6.0` → CLI prints `6`), texts, lists (nested too), maps (JSON objects) round-trip; JSON `true` becomes the
+  TEXT "true"; a location comes back as a Java string (`"Location{world=...,x=0.5,y=4.0,...}"`: return
+  `[loc.x, loc.y, loc.z]` if you need numbers). Parsing is lenient: `set x abc` stores the text "abc"; args that
+  are not a JSON list give `error args must be a JSON list`; broken JSON (`[1,`) is a server error, no reply.
+- `%placeholder%` inside a TEXT value is expanded by the server whenever that text is used: the CLI sends `%` as
+  `\u0025` so `set s '"%player%"'` stores the literal text, but reading it back (get, a call returning it)
+  already gives the nickname. `&` / `§` / `%` in the reply JSON are sent as `\u0026` / `\u00a7` / `\u0025`
+  (the message is legacy-parsed: `&c` would become a color); the CLI decodes them.
+- Protocol (`jmvcc client` speaks it): custom click packet `jmvcc:rpc` with SNBT data `{id:"<id>", k:"<key>",
+  op:"call", fn:"give", args:"[5]"}` | `{id, k, op:"get", var:"coins"}` | `{id, k, op:"set", var:"coins",
+  value:"100"}` | `{id, k, op:"list"}` (args / value are JSON TEXT: NBT lists hold one type). Reply — a log line
+  to the asker only: `jmvcc:rpc <id> ok [<json>]` (always a one-element list; `[null]` — no return value) or
+  `jmvcc:rpc <id> error <text>`. The mod hides `jmvcc:*` lines from chat. Shares one `player_custom_click` with
+  the graceful stop receiver; your own `player_custom_click` handlers keep working and never see `jmvcc:*` keys.
+- Cost: nothing per tick; one key compare per custom click packet.
+
+## Buildings (builder: D:/jmcc/builder, guide builder/GUIDE.md)
+Houses, arenas, lobbies, decor — do NOT improvise them with set_block in game code. Write a build script and let the
+tool check it: `examples/x.build.mjs` exports `build(b)` with `b.set/fill/hollow/walls/line/sphere/cylinder`,
+`b.rotate/mirror/symmetric/repeat/copy` (rotation also turns facing/axis/stairs shapes) and full block states
+(`"oak_stairs[facing=east,half=top]"`, `"lantern[hanging=true]"` under `"iron_chain[axis=y]"`, open/closed trapdoors).
+- `node builder/cli.mjs build x.build.mjs` — every state checked against the registry, plus physics warnings: no
+  support (torches, lanterns, doors, plants), grass / dirt_path under a block turns into dirt in the world, gravity
+  blocks in the bottom layer fall when placed in the air (verified, server-check-37).
+- `screenshot x.build.mjs --angle iso` (and 2 more angles) — look at your build before showing it; `preview` —
+  live 3D for the owner (real game models and textures, rotates with the mouse, reloads on save).
+- `states <block>` — allowed properties; GUIDE.md has the detailing cookbook (which way stairs/trapdoors face, roof
+  corners, shutters, lamp posts).
+- `export-jc x.build.mjs --at X,Y,Z` → a .jc module (set_block with state text, ≤3000 places per call, spread over
+  ticks within the CPU budget): `import "x"` and call `build_<name>()`.
+- Minecraft not found (other machine): `--minecraft <game folder or .jar>` or env `JMVCC_MINECRAFT`.
+- Improve an EXISTING map: `jmvcc client export -- x1 y1 z1 x2 y2 z2 --name map` (the owner in /build or /play near
+  the region — in /dev the client sees the code area; blocks with states from the client's chunks, no chest contents /
+  sign text) → `stats map.json` → script `const m = b.load('map.json'); m.inWorld((w) => w.set(x, y, z, ...))` (world
+  coordinates as in F3) → screenshot / preview → `export-jc script` places ONLY the difference (changed / added /
+  removed → air) at the export's world position. Delete a block from the world with `'air'`, not `b.remove`.
+  builder/GUIDE.md «Improving an existing map».
+
+## Decompile: module JSON → .jc (docs/decompile.md)
+`jmvcc decompile export.json -o main.jc` turns a module (an in-game export or `jmvcc compile` output, also a
+http(s) link) into JustCode that compiles back to the same JSON, and prints the round-trip result. Exit code: 0 —
+lossless, 2 — the round trip found differences (that data would be lost on upload), 1 — error. It never overwrites
+a hand-written .jc (without -o: `<name>.jc`, or `<name>.decompiled.jc` if that exists; `--force` to overwrite).
+Item constants go to `<name>.items.jc` (imported at the top: read main.jc, not the items file). To change an
+old in-game module: decompile, edit main.jc, compile. Lines `// decompile: ...` mark what is not 1:1.
+Factories for values that plain literals cannot write (they emit exactly this JSON):
+```js
+inline var ITEM_CUE = item_raw("H4sI…")          // item as the server stores it (base64 gzip NBT) or a JSON item string
+player::message(text_raw("<red>hi", parsing = "minimessage"))   // text parsing: legacy (a plain string) plain minimessage json
+code::wait(number_raw("%math(%length(l)-1)"))     // a number the server keeps as placeholder text
+var_raw("x", "game") = 1                          // variable with an explicit scope, no declaration needed
+player::play_sound(sound("block.note_block.harp", 1, 2, variation = "", source = "RECORD"))
+player::play_sound(sound = s, source = enum_raw("RECORD"))   // an argument missing from the registry: only a *_raw value
+function menu() {
+  function_info(description = ["&6Opens the menu", "&7selection: 1 player"], icon = item("book"), hidden = false)
+  ...                                             // description / icon / hidden in the in-game function menu
+}
+```
+Decompiled code uses the same sugar where it gives the same JSON: `var a, b, c`, `x = m["k"]`, `l[0][1] = v`,
+`m[k] += 1`. Write new code with normal literals (`item("stone", "&bName")`, `"text"`, `x * 2`, declared variables); the raw
+forms are for decompiled code (a player head or a custom item from the game exists only as item_raw).
+To get such an item: ask the player to put it in the backpack (e.g. heads from /hdb), run `jmvcc client items`
+and paste its `inline var ITEM_… = item_raw(…)` line; never invent the base64.
+`function_info(...)` is fine in new code too.
+
+## Recipes (docs/recipes.jc, compiles as is)
+```js
+save var %player%_coins
+save var %player%_last_use
+game var round_running = 0
+
+// per-player saved counter with default
+event<player_join> {
+  %player%_coins ??= 0
+  player::message("Coins: ${%player%_coins}")
+}
+
+// cooldown via timestamp (ms); return ends the event. player_right_click fires once per click
+// (verified with an empty off-hand); the hand filter is a cheap safety net
+event<player_right_click> {
+  if (value::event_equipment_slot != "hand") { return }
+  line var now = value::timestamp
+  if (now < %player%_last_use + 3000) {
+    player::action_bar("Cooldown!")
+    return
+  }
+  %player%_last_use = now
+  player::message("Used!")
+}
+
+// pressure plate. event_block_type is the full block state ("minecraft:light_weighted_pressure_plate[power=0]"),
+// so == with an id is always false (verified): check the block type with event_block_equals
+event<player_interact> {
+  if (value::event_interaction == "physical" && world::event_block_equals([item("stone_pressure_plate")])) {
+    player::teleport(location(0, 64, 0, 0, 0))
+  }
+}
+
+// kill reward. Who the default player is in player_kill_player is an OPEN question (#10), so name
+// the killer explicitly: %killer%_coins is the same saved variable as that player's %player%_coins
+event<player_kill_player> {
+  save var %killer%_coins
+  %killer%_coins += 10
+  player::message<killer_player>("+10 coins, victim: %victim%")
+}
+
+// countdown broadcast to everyone (on_range includes the end: 0..4 is 5 steps)
+function countdown() {
+  repeat::on_range(0, 4) { i ->
+    player::title<all_players>("${5 - i}", "", 0, 20, 0)
+    code::wait(1, time_unit = "seconds")
+  }
+  round_running = 1
+}
+
+// function with a return value
+function reward_for(streak) {
+  if (streak >= 10) { return 50 }
+  if (streak >= 3) { return 20 }
+  return 5
+}
+
+// random chance 25%
+event<player_break_block> {
+  var roll = variable::random_in_range(1, 100)
+  if (roll <= 25) {
+    player::give_items(item("diamond"), 1)
+    %player%_coins += reward_for(3)
+  }
+}
+```
+Interaction types in `value::event_interaction`: left_click_air left_click_block physical right_click_air right_click_block.
+
+## More recipes (docs/recipes-extra.jc: menu item kept through death, shop menu with click dispatch, parkour start/checkpoint/finish plates and fall, top-N, mm:ss via std::mmss)
+```js
+save var %player%_coins
+save var top_scores   // map: player name -> score
+game var %player%_running    // parkour: 1 while the timer runs
+game var %player%_start      // parkour: run start (ms)
+game var %player%_cp         // parkour: where to put the player back after a fall
+game var %player%_cp_block   // parkour: block location of the last plate (checkpoint de-dup)
+game var %player%_cp_n       // parkour: new checkpoint plates since the start
+inline var CHECKPOINTS = 3   // parkour: gold plates on your course
+inline var SHOP = "shop"
+
+// menu item: a compass in slot 8 (the last hotbar slot, slots start at 0, verified) opens the shop.
+// Give it in player_join AND player_respawn: a death drops it with the rest of the inventory.
+// set_slot_item OVERWRITES whatever is in slot 8 — keep that slot for the menu item in your game.
+// has_item first, so a player who moved it to another slot does not get a second one.
+function give_menu_item() {
+  if (player::has_item(item("compass"), comparison_mode = "TYPE_ONLY")) { return }
+  player::set_slot_item(item("compass", "&aShop &7(right-click)"), 8)
+}
+
+event<player_respawn> {
+  code::wait(1)   // the event asks for a wait before other code
+  give_menu_item()
+}
+
+// no throwing it away with Q. That cancel_event stops a drop is NOT verified on the server: check it once.
+event<player_drop_item> {
+  if (world::event_item_equals(item("compass"), comparison_mode = "TYPE_ONLY")) { world::cancel_event() }
+}
+
+// shop: right-click with the compass opens a menu; custom_id tells our menu apart from others.
+// player_right_click fires once per click (verified with an empty off-hand); the hand filter is a cheap safety net.
+// show_menu fills slots 0, 1, 2... in list order (1st item = slot 0, verified). & codes in item() name/lore
+// are compiled into colored item text.
+event<player_right_click> {
+  if (value::event_equipment_slot != "hand") { return }
+  if (player::is_holding(item("compass"), comparison_mode = "TYPE_ONLY")) {
+    player::show_menu([item("bread", "&aBread &7- 5 coins"), item("iron_sword", "&bSword &7- 50 coins")], "Shop", inventory_type = "CHEST", custom_id = SHOP)
+  }
+}
+
+// shop click: cancel so nothing can be taken out, then ONE line per button: slot -> one call, return.
+// Keep button code OUT of this event (a long else-if chain with inline code is hard to read and to
+// fix). Here a button costs 6 blocks (2 of them pass the arguments); for a big menu give each button
+// its own function without parameters: if (slot == 2) { buy_axe(); return }.
+// Verified: event_slot starts at 0 = the 1st item of the show_menu list
+// (event_item is the clicked item, if you prefer world::event_item_equals). Only the menu half reaches
+// player_click_inventory: clicks in the player's own inventory go to player_click_own_inventory (verified).
+event<player_click_inventory> {
+  if (value::open_inventory_custom_id != SHOP) { return }
+  world::cancel_event()
+  line var slot = value::event_slot
+  if (slot == 0) { buy(item("bread"), 5); return }
+  if (slot == 1) { buy(item("iron_sword"), 50); return }
+}
+
+// give the item if the player can pay; params are shared locals, so callers must not reuse these names
+function buy(goods, price) {
+  if (%player%_coins < price) {
+    player::message("Not enough coins: ${%player%_coins}/$price")
+    player::play_sound(sound("entity.villager.no"))
+    return
+  }
+  %player%_coins -= price
+  player::give_items(goods, 1)
+  player::play_sound(sound("entity.experience_orb.pickup"))
+}
+
+// parkour plates: stone plate = START (place exactly one), gold = checkpoint, iron = finish.
+// Only the start plate starts the timer. If any checkpoint could, a player who just finished would step
+// back on the last checkpoint and "finish" in 2 s: a fake best time. The finish also wants CHECKPOINTS new
+// plates since the start, but bouncing between two checkpoints counts too: build the course so that the
+// finish cannot be reached around it (that is the real protection).
+// Physical interact fires about 2 times a second while standing (verified): a checkpoint counts only when it
+// is a NEW plate: == of two value::event_block of the same plate is true (verified, bench/sneak/block-eq.jc).
+// Block type via event_block_equals, not event_block_type == (always false). value::event_block is the plate's
+// block location, value::location is where the player stands.
+event<player_interact> {
+  if (value::event_interaction != "physical") { return }
+  if (world::event_block_equals([item("stone_pressure_plate")])) {
+    run_start()
+  } else if (world::event_block_equals([item("light_weighted_pressure_plate")])) {
+    run_checkpoint()
+  } else if (world::event_block_equals([item("heavy_weighted_pressure_plate")])) {
+    run_finish()
+  }
+}
+
+function run_start() {
+  %player%_running = 1
+  %player%_start = value::timestamp   // re-set while standing on it: the time counts from stepping off
+  %player%_cp = value::location
+  %player%_cp_block = value::event_block
+  %player%_cp_n = 0
+  player::action_bar("&aGo!")
+}
+
+function run_checkpoint() {
+  if (%player%_running == 0) { return }
+  if (value::event_block == %player%_cp_block) { return }
+  %player%_cp = value::location
+  %player%_cp_block = value::event_block
+  %player%_cp_n++
+  player::message("&aCheckpoint!")
+}
+
+function run_finish() {
+  if (%player%_running == 0) { return }
+  if (%player%_cp_n < CHECKPOINTS) {
+    player::action_bar("&cMissed a checkpoint: ${%player%_cp_n}/$CHECKPOINTS")
+    return
+  }
+  %player%_running = 0   // clear the run: the next one must begin on the start plate again
+  player::message("&6Finish: ${std::mmss(value::timestamp - %player%_start)}")   // ms → "01:15", one action
+}
+
+// player_move fires many times a second: cheapest check (a number) first, block check second.
+// For a full block underfoot use is_standing_on_block (a pressure plate is better caught by the event above).
+event<player_move> {
+  if (value::y_coord < 50) {
+    if (%player%_running == 1) {
+      player::teleport(%player%_cp, keep_rotation = false)   // _cp is always set while a run is on
+    } else {
+      player::teleport(location(0, 64, 0, 0, 0))
+    }
+    player::message("You fell!")
+    return
+  }
+  if (player::is_standing_on_block(item("gold_block"))) {
+    player::give_potion_effect(potion("speed", duration = 40))
+  }
+}
+
+// record a score in the saved map. A never-set variable is the NUMBER 0, and set_map_value on it
+// stops the code line with a server error — create the map first (verified on the server)
+function save_score(score) {
+  top_scores ??= variable::create_map_from_values([], [])
+  top_scores["%player%"] = score              // put_map_value: a new key is added
+}
+
+// broadcast top-n "1. name - score". sort_any_map keeps the sorted order for get_map_key_by_index
+// and for_each (verified on the server). on_range includes the end.
+function broadcast_top(n) {
+  line var sorted = variable::sort(map = top_scores, sort_order = "DESCENDING", sort_type = "VALUES")
+  line var size = sorted.length()
+  if (size > n) { size = n }
+  if (size == 0) { return }
+  repeat::on_range(0, size - 1) { i ->
+    line var name = sorted.get_map_key_by_index(i)
+    line var score = sorted[name]             // sorted is a map (sort_any_map above)
+    player::message<all_players>("${i + 1}. $name - $score")
+  }
+}
+
+event<player_join> {
+  %player%_coins ??= 100
+  save_score(%player%_coins)
+  broadcast_top(5)
+  player::message("Time: ${std::mmss(75000)}")   // "01:15"
+  give_menu_item()                    // last: an error in it must not skip the coin setup ("Error isolation")
+}
+```
+
+## Mini-game round (docs/recipes-round.jc, compiles as is)
+Last player alive wins; copy the file and change spawns/kit. The shape that survives players leaving:
+- ONE world loop in top-level code (world_start, no target) owns the flow,
+  `enum State { WAITING, COUNTDOWN, RUNNING, OVER }` + `game var state: State`: WAITING → (enough players)
+  COUNTDOWN with `player::title<all_players>` → RUNNING → OVER (results + break) → WAITING. Events only change shared state; a player-bound thread dies when its player quits.
+  `value::players` / `value::all_players_names` work in world code with no target (verified).
+  Top-level code is one code line and the loop is its last statement: only plain variable setup goes before it
+  (a server error there would mean no loop at all — "Error isolation" above).
+- `game var alive` = list of fighter names (`value::all_players_names` at start; re-check `value::players` there,
+  someone may leave in the last countdown second). Every tick the loop keeps only names still in
+  `value::all_players_names` — a `player_quit` handler may be cut off, do not rely on it.
+- Each fighter gets its OWN spawn on the ground: `select::player_by_name(name)` then actions without
+  `<selector>` (one spawn per index; no high drop — fall damage kills everyone at once), `select::reset()`.
+  Actions without `<selector>` going to the selection in a no-target thread is verified (with one player);
+  `value::x` there still does NOT read the selected player. The spectator spot is elsewhere.
+- `player_death`: `line var who = "%player%"`, remove `who` from `alive`, announce `"$who is out"`.
+- `player_respawn` while the round runs: not in `alive` (died in the round) → spectator. Still in `alive` → died
+  BEFORE the round (lobby PvP, AFK on the death screen when `alive` was copied): put them INTO the fight (own
+  spawn, gamemode, kit). Removing them would give a free win to whoever killed them in the lobby. Read `state`
+  into a `line var` BEFORE `code::wait(1)`: if the round started during that tick, start_round already placed them.
+- Wins: `struct Stats { wins = 0 }` + `save var %player%: Stats` + `%player% ??= Stats()` in player_join.
+  When ≤ 1 left: `state = State.OVER`, winner `line var w = alive[0]`, `` save var `${w}`: Stats ``, `` `${w}`.wins += 1 ``
+  (same storage as `%player%.wins`), titles, wait, everyone back to the lobby, break, `state = State.WAITING`.
+
+## Boss fight (docs/recipes-boss.jc, compiles as is)
+A summoned boss with a boss bar, capped minions, a damage table and a finale. Copy it for any "one special mob"
+mechanic. Mostly verified facts; the inferred, NOT checked spots (all listed in the file's header, each behind a
+uuid guard that just skips code if the guess is wrong):
+`value::uuid<victim_entity>` (not used); `has_entity` for a mob in an unloaded chunk. The shape:
+- Summon from a player event: `world::spawn_entity(item("vindicator_spawn_egg"), loc, 200, "&4&lThe King")` (health
+  200 works without set_max_health), then `boss = value::uuid<last_entity>`. Summon only
+  `if (!world::has_entity([boss]))`, with `game var boss = ""` in top-level code (`has_entity([""])` is false),
+  plus a summon cooldown (`value::timestamp` vs `game var last_summon`): the star is not used up and every kill
+  pays out. has_entity notices a boss killed or removed outside your events, but NOT one left from before `/play`
+  (`boss` resets to `""`) — that one is removed by the world-start cleanup.
+- Mobs SURVIVE `/play`, game vars do not. The recipe keeps the boss/minion uuids in a `save var` list (dead ones
+  pruned with has_entity) and removes them on world start and when a fight ends (`select::entity_by_name([u])` +
+  `entity::remove()` in a NO_TARGET process). The cleanup copies and clears the list first and puts back the live
+  boss and its minions, so it is safe to start at any time. `select::all_mobs()` + `entity::remove()` also works
+  but removes EVERY mob in the world; selecting by custom name or tag is not verified.
+- ONE NO_TARGET loop per fight with a generation token: summon does `boss_gen += 1`, the loop starts with
+  `line var my = boss_gen` and breaks when `boss_gen != my` or `!world::has_entity([boss])` — a quick re-summon
+  cannot leave two loops running. Cleanup is started from the loop, never after a `code::wait` in `entity_death`.
+- Read the boss's values in a NO_TARGET process `boss_tick` (own line, started every 5 s by the loop):
+  `select::entity_by_name([boss])` → `value::health<current>` (verified: <current> reads the selection). Abilities and
+  a leash (`variable::distance(value::location<current>, arena) > N` → `entity::teleport(arena)`) go there too.
+- Bar: in `entity_take_damage` with `value::uuid == boss`: `boss_hp = max(0, value::health - value::event_final_damage)`
+  (health is BEFORE the hit), then `player::set_boss_bar<all_players>(id, "&4&lThe King ...", boss_hp / MAX * 100)`.
+- Damage table: `player_damage_entity` (`%player%` = attacker, `value::event_final_damage`) into a name → damage map.
+  Which entity was hit (`value::uuid<victim_entity>`) is not verified, so during a fight a hit on ANY mob counts
+  and can call a minion.
+- Minions: uuid list pruned with `has_entity`, capped, spawned from a player event (where last_entity is verified).
+- Finale in `entity_death` (`value::uuid == boss`): this thread survives `code::wait`; top damage via `sort_any_map`.
+
+## Look and feel (the owner judges games by eye in first person)
+Before writing, picture what the player sees from where they stand. Rejected as lazy: a side legend explaining what
+each block means, colored blocks instead of numbers, particles at a fixed point above an object (invisible from
+above/first person), a board whose far cells are out of reach or unreadable at a grazing angle. Reference games:
+D:\justmc-games\minesweeper\main.jc and snake\main.jc (the clicker there is older and floats at y=63 — do not copy it).
+- Show information ON the object: flat text on top of blocks, the digits/icons themselves colored, state shown by
+  shape (closed cell = bottom slab, opened = full block).
+- Icons: server symbols. Verified on text displays: ⚑ ☠. Take others from `/symbols 1..8` in game (or a
+  `jmvcc client shot` of that list); do not type emoji from memory — they may render as boxes.
+- Colors: write the color FIRST, then `&l`: `"&#42A5F5&l1"` (a color code after `&l` resets bold — verified on item
+  names). Hex `&#RRGGBB` is verified on item names and text displays; in chat the owner says it works, in action bar
+  and titles it is not checked. Pick colors against the block under them: a light floor (white_concrete) with
+  saturated or dark digits, no gray on gray (minesweeper darkened 8 from #9E9E9E to #757575).
+- Flat text on a block top (verified, server-check-17): yaw 0 + pitch -90 lies flat and reads upright for a player
+  standing SOUTH of it facing north (yaw 180 is upside down/sideways; other directions not checked); the text anchors
+  at the bottom edge of the line, so shift z by +0.125·S to center it. S = 4.5 makes a digit nearly fill a cell.
+  ```
+  save var marks                // and in top-level code: marks ??= []  (an unset list swallows appends — verified)
+  function mark(loc, txt) {     // loc = variable::set_all_coordinates(x + 0.5, top + 0.01, z + 0.5 + 0.125 * 4.5, 0, -90)
+    world::spawn_text_display(loc, "mark", displayed_text = [txt])
+    marks.append(value::uuid<last_entity>)              // store the uuid FIRST: an error later leaks it
+    entity::set_display_scale<last_entity>(vector(4.5, 4.5, 4.5), "SET")
+    entity::set_text_display_background<last_entity>("#000000", 0) // transparent background
+  }
+  ```
+  `top` = 4.0 on a full block whose top face is y=4, +0.5 on a bottom slab. Displays SURVIVE /play like mobs: remove
+  them on restart and world_start (`select::entity_by_name([u])`, `entity::remove()`, then `select::reset()`).
+  Removal from a player event is verified; in a NO_TARGET process it is verified on mobs only, so check
+  `world::has_entity([u])` afterwards and keep the survivors in the list (minesweeper `sweep`).
+- `location(...)` and `vector(...)` take number CONSTANTS only; with variables use
+  `variable::set_all_coordinates(x, y, z, yaw, pitch)`. Always pass yaw AND pitch (`location()` defaults yaw to 90);
+  pitch is positive = looking down.
+- Feedback where the player looks: particles on the clicked face (seen live in the clicker, the owner liked it):
+  ```
+  line var face = variable::get_vector_from_block_face(value::event_block_face)
+  line var at = variable::align_location(value::event_block, "KEEP", "ALL", "BLOCK_CENTER")
+  at = variable::shift_location_on_vector(at, face, 0.6)
+  player::display_particle(particle("crit", 6, 0.25, 0.25), at)
+  ```
+- Sounds: a distinct one per outcome (click, success, refusal, lose, win), frequent ones quieter and higher:
+  `sound("entity.experience_orb.pickup", 0.3, 1.8)`; refusal `entity.villager.no`, level-up
+  `entity.player.levelup` are used in the games; find others with `jmvcc search` (the compiler checks names).
+- HUD: timer/score in the action bar from ONE world loop once a second, not per tick. Hints also go to the action
+  bar, so pause the HUD ~2 s after a hint (`hint_until` in minesweeper). Records: sidebar scoreboard (verified);
+  progress: boss bar 0..100 (verified). On join: 2–3 chat lines with goal, controls, record.
+- Info channels — chat is the WORST one; agents tend to dump everything there. Use instead:
+  - leaderboards/tops: a text display board in the world over the play area (billboard toward the viewer, dark
+    semi-transparent background, updated only when the data changes — `entity::set_text_display_text` works, seen
+    live in snake), or player heads with name + lore in a chest menu for big maps;
+  - notifications (bought, not enough coins, your turn, new record): `player::action_bar` + a sound, DIFFERENT for
+    positive (`entity.experience_orb.pickup`, `entity.player.levelup`) and negative (`entity.villager.no`) events;
+    big moments (win, death): `player::title`; "X started a game" for everyone: the board/action bar, not chat;
+  - a real batch of info for one player (rules on join, round summary): a framed, colored block, so it reads as UI:
+    ```
+    game var LINE = "&8&m                                                  "   // strikethrough spaces = a seamless line (verified; ━ ─ ▬ show seams)
+    player::message([LINE, "  &#FFB300&lЗМЕЙКА", "  &7Ешь &6яблоки&7, не врежься в бортик", "  &e1-4 &7— повороты, &aизумруд &7— старт", LINE], merging = "SEPARATE_LINES")
+    ```
+    Hex `&#RRGGBB` works in chat and titles (verified, server-check-18). ~50 strikethrough spaces fit the default chat.
+- Controls: squeeze the mechanics, do not hand out hotbar items as buttons. Movement keys (verified, server-check-19/19b):
+  ```
+  event<player_input_event> {            // fires on every change of held movement keys
+    if (world::event_has_input("FORWARD")) { turn(0) }      // also BACKWARDS, LEFT, RIGHT, JUMP, SNEAK
+  }                                      // value::event_input_list = "[forward, right]" (empty on release)
+  ```
+  Keep the player still: `player::set_attribute(0, "GENERIC_MOVEMENT_SPEED")` and `(0, "GENERIC_JUMP_STRENGTH")`
+  (restore 0.1 / 0.42 after) — keys still arrive. Fixed top-down camera: spawn a text display at
+  `location(x, h, z, 180, 90)`, then `player::set_gamemode("SPECTATOR")`, wait 5 ticks, `player::spectate_target(uuid)` —
+  the view looks straight down and cannot turn, WASD still arrives; Shift leaves the camera
+  (`event<player_stop_spectating_entity>`) — re-attach after 2 ticks or treat Shift as "exit/pause". Before choosing a
+  scheme, search (`jmvcc search input|camera|spectate|steer`) and weigh 2–3 options.
+- Multiplayer: one shared board ("one plays, the rest watch") is the fallback. For solo games prefer per-player
+  plots (owner's idea, no recipe yet): a plot slot per player on join (grid offsets, free slots in a save list), built
+  from a template, everything cleaned on quit (blocks, entities by uuid); deny rejoin/restart abuse that farms plot
+  reloads (cooldown). The world (Star: 768×768) is larger than the 32×32 floor, so plots can float on their own pads.
+- From the owner's working billiard (seen in a working game, not re-verified by us; full notes
+  dev/research/billiard-facts.md):
+  - Smooth motion of a display: once after spawning `entity::set_display_teleport_duration<last_entity>(STEP)`; then
+    every STEP ticks just `entity::teleport` — the client interpolates. Rotation/translation changes need
+    `entity::set_display_interpolation(STEP, 0)` right before them (delay 0), or they jump.
+  - A rolling ball: `entity::set_display_rotation_from_axis_angle(axis, angle, "ADD", "LEFT_ROTATION")` with axis
+    `(vz, 0, -vx)` and angle `distance / radius * 57.3` degrees; a head rotates around its origin, so compensate with
+    `set_display_translation` (rotate the center vector the same way via `variable::rotate_vector_around_vector`).
+  - Several entities with the same custom name: `select::entity_by_name("ball1")` selects all of them;
+    `value::selection_target_uuids` gives their uuids. Entity custom tags: `entity::set_custom_tag(name, value)`,
+    `entity::get_custom_tag`, `entity::has_custom_tag` (+ `select::entity_by_conditional` on a tag).
+  - A number slot accepts `%math(...)` text (`number_raw("%math(%var(speed)*7)")` in decompiled code).
+  - Menus: `player::show_menu(..., inventory_type = "HOPPER")` = 5 slots; `player::expand_menu(items, size = 3)` adds
+    rows; `player::remove_menu_row(size, position = "BUTTON")` (the server enum is spelled BUTTON, not BOTTOM).
+  - Text input through chat: set a per-player flag from the menu, read `value::event_chat_message` in
+    `event<player_chat>` + `world::cancel_event()`, clear the flag after a timeout (`wait` + compare a token).
+  - `value::cpu_usage` = the world's CPU %, handy for measuring (not in an every-tick loop).
+  - Heavy patterns to avoid (found there): a process per moving object each tick with `select` by name inside the
+    loop (O(N²) entity searches) — keep positions in a map and use one loop per table; `entity::remove<all_entities>`
+    on start also removes foreign entities — keep uuids.
+- CPU budget (measured, dev/research/rerun-bench.md): give it in % of `value::cpu_usage` and read it on the spot (not
+  in an every-tick loop). The ms → % factor changed 1.8x between sessions (1% = 68–125 µs of code per tick), so keep
+  heavy code ≤ ~3 ms per tick and peaks ≤ 80%. ~100% for a moment is fine, sustained >100% crashes the world (high_cpu).
+- Measured cost of code (dev/research/ops-bench.md, structure-bench.md; one simple action such as `a = i` = 1 ≈ 0.7 µs,
+  a loop iteration adds ≈0.5):
+  - Comparisons: `>` `<` ≈1 (`>=` `<=` compile to the same one-number actions) and `variable::number_in_range(x, a, a,
+    "INCLUDE_ALL")` (numeric equality) ≈1.5, but `==` / `!=` ≈8 (they compile to equals / not_equals with a list) — in
+    hot loops compare numbers without them. With `-O` (`jmvcc client deploy -O`) the compiler does it itself:
+    `x == 5` / `x != 5` → number_in_range when x only ever holds numbers (loop counters, `+=`, `%math`, number
+    constants and game values; not save var, not a var that ever gets a text) — verified, server-check-23/23b.
+    `variable::is_type` ≈7 and an empty `code::catch_error(e) { }` ≈0.5 (server-check-34).
+    `k == a || k == b || ...` ≈14 per term → `variable::equals(k, [..], compare_type = "ANY")` ≈11, `map_has_key` ≈9,
+    or a range check.
+  - Maps: `m[k]` ≈1.2 and `m[k] = v` ≈1.8 (they compile to get_map_value_single / put_map_value); the list-key
+    forms `m.get_map_value(k)` ≈6 and `m.set_map_value(k, v)` ≈11 — only for several keys at once. Lists: `l[i]` ≈1, `l[i] = v` ≈1.5 (list size does not matter), `list_append_value` ≈7.5 (add
+    several values in one `append([a, b])`), `get_list_index_of_value` ≈2.6 (check `> -1`) vs `list_contains_value`
+    ≈9, sorting 50 numbers ≈67. Text `"$a$b"` ≈2 vs `variable::set_text([..])` ≈7; `%math` expression ≈3; `+=` ≈1;
+    `variable::absolute` / `variable::pow` ≈1. line / game / save var cost the same.
+  - Reading a list out of a map or variable copies it (≈0.25 µs per element): do not pull big lists every tick.
+  - Functions: a call ≈2 (also `code::call_function(name)`), arguments + return ≈ +7 more — in loops of hundreds per
+    tick inline the code or call a parameterless function over the shared vars. `start_process` ≈4 and runs the
+    process at once, inside the caller's tick, up to its first wait. Loops: multi_times / on_range / for_each ≈0.5
+    per iteration, `repeat::while` with a counter ≈1.8. Dispatch by key: a list (`LV[k]`,
+    `code::call_function(LF[k])`) or `M[k]`, never an `==` if/else chain (10 branches ≈46 per key).
+  - Many objects: a process per object with `wait(1)` ≈5.5 µs per object per tick; one loop that keeps object state
+    in lists is only ≈20% cheaper, so up to ~50 objects pick what is convenient. A sleeping process is free, each
+    wake-up ≈6 µs: use wait(5) / wait(20) where every tick is not needed.
+  - Output with one player: a particle ≈17, action bar ≈8, sound / title ≈3 (network cost is invisible to cpu_usage).
+  - `world::set_block` without update_blocks is ≈2.5x dearer on real changes than with `update_blocks = true` — pass
+    it for blocks you change often (it is also what makes changes from a world loop visible).
+- Display entities (measured, dev/research/entities-bench.md): spawn ≈40 µs (40 per tick all spawn, no tick wait);
+  remove as a batch ≈5.5 µs each — `select::entity_by_name(uuid_list)` + `entity::remove()` + `select::reset()` (one by
+  one costs 3x). Changing one display (select [u] + action + reset ≈3 µs): block / item / scale / translation /
+  rotation / teleport ≈4–6 µs, one text line ≈12, 3 colored lines ≈31, `set_display_transformation_matrix` ≈34 —
+  prefer scale / translation / rotation. Every tick: 64 text changes ≈ +11% cpu, spawn + remove 20 ≈ +13%. Pixel
+  screen: group pixels by color — `set_block(color, list, update_blocks = true)` and select(uuid list) +
+  `set_block_display_block(color)` cost the same, per pixel 2.5–3.5x more. The block of a block_display cannot be read.
+- Building / switching maps (measured, dev/research/map-build-bench.md, map-size-bench.md, air-bug-bench.md):
+  - Keep templates in the SAME chunks as the arena (straight above or below it: same x,z, other y). A clone into
+    other chunks costs +≈5 ms per call whatever its size, even 1×1×1 (≈ +40% cpu if done every 2 ticks).
+  - Up to ~150 changed blocks: set only the DIFFERENCE (incl. air) with `world::set_block(block, list_of_locations,
+    update_blocks = true)`, one call per block type (≈2 µs per block). More than ~1000 (or ≳20% of the zone):
+    `world::clone_region(src1, src2, src1, dst_corner, ...)` from a template (≈0.5 ms up to 1500 cells, ≈1.5–2 ms for
+    8192). In between it is about a tie.
+  - At most 3000 locations per `set_block(..., update_blocks = true)` call — the rest is silently dropped. Split longer
+    lists into several calls (several in one tick work).
+  - A clone with air (`ignore_air = false`) skips the template's air until its first non-air block (walk: template
+    chunks from the min corner, inside a chunk y → z → x) and leaves old blocks there. Fix: an ANCHOR — any non-air
+    block (not cave_air; barrier is invisible) at the template's min corner (min x, y, z); or `clear_region` + clone
+    with `ignore_air = true`, but then every chunk column of the template zone needs at least one block, or the clone
+    costs +≈5 ms. An empty template erases nothing — use `clear_region`.
+  - cpu: a clone of 8192 cells every tick ≈25%, every 2 ticks ≈13%; a difference ≈2–3% per 100 blocks per tick. Never
+    check blocks before setting (a check costs more than setting). PER-TICK LIMIT: ~20 calls of set_region /
+    clear_region / clone_region / set_block(update_blocks = false) per tick, more makes the thread wait a tick; dozens
+    of clone_region in one tick stalled the server for 13 s and crashed the world code (high_cpu) — keep clones to 1–2
+    per tick. set_block with update_blocks = true is not under that limit.
+  - `world::get_block_material(p, "ID")` returns the id without `minecraft:` (`"air"`); `"ID_WITH_DATA"` includes it.
+- Beauty must not cost CPU (owner rule): particles/sounds only on events with small counts; no per-tick particle or
+  display loops; spawn displays only when the state changes, spread big batches over ticks (minesweeper flood: 16
+  cells, then `code::wait(1)`).
+- Reach and view: a board bigger than ~4 blocks needs a viewing platform SOUTH of it (larger z, about 4–5 blocks up,
+  30–45° down: `player::teleport(location(x, y, z, 180, 40), keep_rotation = false)`) and
+  `player::set_attribute(16, "PLAYER_BLOCK_INTERACTION_RANGE")` (seen live: from the minesweeper tower clicks reached
+  the far corner ~14 blocks away). Bring players back there with `code::wait(1)` +
+  teleport in `player_respawn` (set_spawn_point did not work).
+- Protect the build: cancel `player_break_block`, `player_place_block`, `block_damage`, drop/swap of the menu item
+  (as in minesweeper; seen live there, not in the facts table).
+- Blocks set from a NO_TARGET world loop (snake steps) did not show up on the client until `update_blocks = true` was
+  passed to `world::set_block` (seen live: the server had them, screenshots did not). Pass it for anything that moves.
+- `set_text_display_background` opacity 110 errored and cut the code line; 55 works (keep it ≤ 100, not checked
+  further). `player::set_spawn_point` did not change `value::spawn_location` — teleport in `player_respawn` instead.
+- In `player_change_slot`, `value::event_hotbar_slot` is the NEW slot (0..8) at once; `value::slot` is still the old one.
+- Measure the world before building — never assume the floor height. The owner's play world: a 32×32 superflat floor,
+  x and z from -16 to 15, top block y=3, players at y=4, void beyond the edge (falling = death; never teleport a player
+  over air). Recipe coordinates elsewhere in this file (y=64, `y_coord < 50`) are placeholders from an old test world.
+  Probe once, then delete the probe: `log("under feet: ${value::block_beneath}")` while standing on the floor
+  (verified: block coordinates) gives the floor y; then scan (verified, server-check-17b):
+  ```
+  var hi = 0
+  var i = 0
+  repeat::while(i < 300) {
+    i = i + 1
+    line var p = variable::set_all_coordinates(i, 3, 0, 0, 0)    // 3 = the floor y you measured
+    if (!world::block_equals(p, [item("air")])) { hi = i }
+  }
+  log("floor x up to $hi")
+  ```
+  Keep the game area 2 blocks inside the edge; where players run (arena, snake, parkour) put a wall/barrier on the edge.
+
+## Verified server facts (English summary of docs/semantics.md — you do not need that file)
+Variables and threads
+- Scopes: `save var` whole world, survives restart; `game var` whole world until restart; `var` local to the
+  thread, passed into called functions (they see AND change it); `line var` only its code line, survives
+  `code::wait` inside that line, not passed to functions.
+- A thread tied to a player/entity (its events, `proc()` started from them) stops mid-execution when the target
+  leaves/dies. `repeat::forever` in `player_join` dies when the player quits. World loops: top-level code or
+  `code::start_process("p", target_mode = "NO_TARGET")`.
+- A variable never assigned is the NUMBER 0 (text `0`). So: defaults with `x ??= value`; before teleporting
+  to a stored location keep a flag (`%player%_has_cp = 1` when you store `%player%_cp`, `if (%player%_has_cp == 1)`
+  before `player::teleport(%player%_cp)`); `m.set_map_value(...)` on a never-set `m` is a server error that
+  STOPS the code line — first `m ??= variable::create_map_from_values([], [])` (= empty map, size 0, text `{}`).
+- `var b = a` for a list COPIES it: `b[0] = "z"` does not change `a`.
+- `variable::is_type(x, variable_type = "ARRAY")`: list (also empty) ARRAY, map MAP, text (also "5") TEXT, number
+  NUMBER, never set NUMBER; a list in `value` is not spread (server-check-32). The kind check for mixed calls uses it.
+- `code::catch_error(e) { }` (controller_exception): without an error e is not touched; an error stops the body, e = the
+  error id (text) or the throw message, the code after the block runs; nested blocks catch only their own error.
+  `code::end_thread()` inside the body (also from a called function) exits ONLY the block — `try` re-ends the thread
+  after it when end_thread is in the try body itself (not from a called function: warning). return / stop_repeat / skip_iteration pass through. `>` / number_in_range on a non-number text is a server
+  error (server-check-28, -34, -35; the try/match sugar verified live: server-check-36).
+- On `/play` world code (top level) runs FIRST, then `player_join`; join sees the game vars world code set.
+- The `entity_death` thread keeps running after `code::wait` (the entity is already dead, the code goes on) —
+  the exception to "threads die with their target".
+Control flow
+- `return` in a function leaves only the function; the code after the call goes on; return values arrive.
+- `&&`, `||`, `!`, `else`, text `==`, `repeat::while(i < 3)` work as written.
+- `break` outside a loop inside a function = `control_end_thread`: ends the WHOLE calling event line (the
+  caller's loop and the code after it too; the compiler warns). Leave a function with `return`; stop the
+  caller's `repeat::forever` with `code::stop_repeat()` (works from a called function).
+- `repeat::on_range(0, 3)` includes the end: 0 1 2 3.
+Numbers and text
+- List indexes start at 0. `floor(75 / 60)` = 1 (no `.0`), `75 % 60` = 15, `-7 % 60` = -7 (sign kept, like Java).
+- `"5" * 2` = 10: text that looks like a number works in math.
+- `cos`/`sin` take degrees: `cos(120)` = `-0.5000000000` in text (10 decimals), `sin(90)` = `1`.
+- `\n` in text and `player::message([...], merging = "SEPARATE_LINES")` give line breaks.
+- Colors: `&a`, `&c`... work (until the end of the text); MiniMessage `<red>` and `§b` do NOT (shown as text).
+- Text components with `set_component_hover` / `set_component_click` work (show_text, copy_to_clipboard).
+- `sort_any_map` keeps the sorted order: `get_map_key_by_index` and `for_each` follow it.
+Units
+- Number arguments show their unit in signatures (`fade_in: number(ticks)`); `*_ticks`/`ticks` are ticks
+  (20 = 1 s). `code::wait` takes `time_unit` (default TICKS). `potion(..., duration = 200)` = 200 ticks (10 s).
+- `value::timestamp` = UNIX time in milliseconds; `value::world_time` = world time in ticks.
+Items, sound, menus
+- `give_item` without `amount` gives the item's count: `item("x")` → 1, `item("golden_apple", count = 3)` → 3.
+  With `amount` it replaces count: `give_item(item("arrow", count = 16), amount = 2)` gives 2.
+- `play_sound` without `location` plays to the player, not from a point.
+- A missing key / index out of range in an explicit `get_map_value` / `get_map_value_single` / `get_list_value`
+  call without `default_value` gives null: it prints "0" and math reads 0, but `== 0` and `in 0..0` are FALSE
+  (verified). `m[k]` / `l[i]` pass `default_value = 0` for you; in explicit calls pass `default_value = 0`.
+- `player_click_inventory` on a `show_menu`: `value::event_slot` from 0, `value::event_item` = the clicked
+  menu item, `value::open_inventory_custom_id` = the `custom_id` of `show_menu`, `value::event_slot_type` =
+  `"container"` for a menu slot. Only the menu half reaches `player_click_inventory`: clicks in the player's
+  own inventory while a menu is open go to `player_click_own_inventory` (`event_slot` hotbar 0..8, main
+  9..35, `event_slot_type` also `"container"`). There `value::open_inventory_custom_id` is also set (the open
+  menu's id) and a shift-click has `value::event_inventory_click_type` = `"shift_left"`; `world::cancel_event()`
+  on it keeps the item out of the menu.
+- `show_menu` puts the 1st list item in slot 0, then slots follow list order. For a gap `item("air")` in the
+  list probably gives an empty slot (compiles; not checked on the server).
+- `player::set_boss_bar(..., progress)` is 0..100 (50 = half; 0.5 is almost empty); `&` colors in its title
+  work (`&4&l` = dark red bold).
+- `player::set_slot_item(item, 8)`: slot 8 is the LAST hotbar slot (slots start at 0). It overwrites that slot.
+- `world::remove_scoreboard` of a board that does not exist does nothing; the code line goes on.
+- Sidebar: `world::create_scoreboard(id, "&cTitle")` + `world::set_scoreboard_score(id, "Line text", n)` +
+  `player::show_scoreboard(id)` shows it on the right; `text` is the line label, `&` colors work.
+- `player_right_click` with a book in hand fires; `value::main_hand_item` is that book.
+Blocks
+- `value::event_block_type` is the FULL block state, e.g. `"minecraft:light_weighted_pressure_plate[power=0]"`:
+  `==` with an id (with or without `minecraft:`) is always false. Check the block type with
+  `world::event_block_equals([item("id")])` or `world::block_equals(value::event_block, [item("id")])` (both work).
+- `value::event_block` is the block's location (`{"x":0.5,"y":4.5,"z":0.5}`), not an id.
+- `==` on two locations works (equal `value::location`s, equal literals `location(1, 2, 3)`). A stored
+  `value::event_block` == the next one of the same plate is true too (verified) — de-dup plates this way. Comparing `value::event_block` with a
+  literal is NOT checked either (it is the block centre x.5 y.5 z.5, and `location()` defaults yaw to 90): to mark one
+  special plate use a different plate type (the parkour recipe's stone start plate).
+Events and players
+- `value::players` (number in the world) and `value::all_players_names` (list of names) work in world code
+  with no target (top-level code / world loop).
+- `event<player_join>` also fires for players already in the world when the game starts (`/play`,
+  `jmvcc client deploy`), so per-player init and HUD loops in `player_join` cover them.
+- `event<player_move>` fires every tick while the player moves (20/s, also while falling), 0 times standing still.
+  Camera rotation alone: not checked. Keep it cheap.
+- Standing on a pressure plate: `player_interact` with `event_interaction == "physical"` fires about 2 times a
+  second while you stand (6 in 3 s) — add a cooldown, or act only on a NEW plate (compare `value::event_block`
+  with the stored one, as the parkour recipe does; both ways are verified).
+- `player_right_click` fires ONCE per click (`event_equipment_slot` = `"hand"`, interaction `"right_click_air"`;
+  checked with an empty off-hand). A right click with an EMPTY hand into the air fires nothing (the client
+  sends nothing). The filter `if (value::event_equipment_slot != "hand") { return }` is a cheap safety net.
+- `player_death`: the event player (`%player%`, actions without `<selector>`) is the one who died. On a death
+  not caused by a player (e.g. `player::damage`) `%killer%` and `%victim%` are NOT substituted: they stay as
+  the literal text `%killer%`.
+- A runtime error reaches chat as "Action <name> stopped the code line because of an error: <reason>" with the
+  code block's x y z (the bridge prints it as an `error` line). The rest of that line does not run ("Error isolation").
+Loops, conditions, placeholders (verified, server-check-8)
+- `repeat::on_range(1, n)` reads `n` once; modifying the list you `for_each_in_list` over STOPS the loop after the
+  current step (no error) — collect changes in another list (the compiler warns: `loop-list-modified`). `stop_repeat` / `skip_iteration` act immediately.
+  A function with `code::wait` inside: the caller waits for it to finish.
+- `==` / `!=` are the expensive conditions (≈8 actions: they compile to equals / not_equals with a list); `>` `<` cost ≈1
+  (measured, dev/research/ops-bench.md; `>=` `<=` compile the same way). `x == 1 || x == 2 || x == 3` costs 3 equals — write
+  `variable::equals(x, [1, 2, 3], compare_type = "ANY")` (one) on hot paths.
+- `variable::equals(x, [5, 6], compare_type = "ANY")` = x is one of; `variable::not_equals(x, [a, b])` = x equals none;
+  `number_in_range` NOT_INCLUDE (min,max) / INCLUDE_FIRST [min,max) / INCLUDE_LAST (min,max] / INCLUDE_ALL [min,max]; `multiple_equals` compares
+  pairwise; `list_value_equals(l, i, [v])` — index from 0, out of range = false; `list_is_empty([l])` works.
+- Placeholders in text: `%val(timestamp)`, `%val(x_coordinate)`, `%val(current_health)` (NOT `health` — unknown ids give 0);
+  `%length(name)` / `%length_local(name)` (missing variable → -1); `%index(name, 0)` (from 0); `%entry(map, key)`
+  (missing → 0); `%math(%length(gl)-1)` works; `%math(10/4)` = 2.5. `%%` is NOT an escape — never write it.
+- `variable::format_timestamp(ms, "mm:ss", "UTC")` → `01:15` (zero-padded; hours are dropped past 60 min — use
+  `"H:mm:ss"` → `1:02:05`); `"mm:ss.SSS"` → `01:15.123`; a single `S` does not shorten (`1:15.123`).
+- `var y = x` where `x` was never set: `y` becomes 0 and `variable::exists([y])` is true.
+- An event caused by an action runs synchronously: right after `player::damage(1)` the `player_take_damage`
+  handler has already run (its writes are visible).
+- `code::controller_async_run() { }` does NOT work (server error, line stops; compile error `async-run-broken`) — use a `process` with `code::wait`.
+- Two functions with the same name: a call runs BOTH, in order (the compiler warns `duplicate-function`).
+- `%val(id)` without a selector reads the event's default target like `value::x` (the damaged mob in
+  `entity_take_damage`; the selected player in a process after `select::all_players()`).
+- `l[9]` past the end gives 0 (no error); `variable::list_is_empty([x])` is true for an unset variable and an empty
+  map, false for a text.
+- An unset variable is 0 in conditions too: `if (x == 0)` is true, `multiple_equals([x], [0])` is true.
+- `!cond` is always the exact opposite of `cond`, also with several or zero targets. A condition with several
+  targets (`entity::name_equals` on 2 selected) is true when ANY of them matches; with zero targets it is false.
+- `number_in_range`: INCLUDE_LAST is (min,max]; min > max is always false (bounds are not swapped). A text value in
+  `number_in_range` or `>=` is a server error (line stops) — but a numeric text ("5") is read as a number, and a
+  never-set variable is 0 (server-check-22).
+- `%val(id)` uses the server id (`x_coordinate`, `y_coordinate`, `current_health`, `timestamp`, `event_final_damage`) and
+  gives the same as `value::x`; an unknown id silently gives 0. `%length(x)`: list size, -1 for an unset variable,
+  the text LENGTH for a text, the size of a map. `get_list_length` / `l[i]` on a non-list is a server error.
+- `l[-1]` and `l[9]` past the end give 0; `list_value_equals(l, -1, [v])` is false.
+- `list.append(x)` on a never-set variable does NOTHING (no error, still unset) — create the list first
+  (`l ??= []` or `var l = []`); `l.remove(x)` on it is a server error.
+- `%index_local(l, 1)`, `%entry_line(m, k)`, `%length_line(l)` etc. work like the game-scope forms.
+Displays and blocks
+- `player::display_hologram(loc, "A\n&cB")`: two lines, & colors work; a second hologram at the SAME location replaces
+  the first (update a board by re-displaying at the same spot), another location makes a separate one.
+- `value::block_beneath` is the block under the feet in block coordinates (`{x:0, y:3, z:0}`);
+  `player::is_standing_on_block([item("gold_block")])` and `is_standing_on_block(locations = [loc])` both work.
+- Fireworks: `var fw = variable::set_item_component(item("firework_rocket"), "fireworks",
+  "{flight_duration:1b,explosions:[{shape:\"large_ball\",colors:[I;16766720]}]}")` then
+  `world::launch_firework(fw, loc, "UPWARDS", instant = false)` (verified, server-check-6).
+- An empty list literal `[]` fits any list parameter (= argument left empty).
+- Block STATES go as TEXT straight into the block argument: `world::set_block("oak_stairs[facing=north,half=top]", loc)`,
+  `"grass_block[snowy=true]"` (verified: snowy grass and an upside-down stair; the compiler checks property names/values
+  against the MC registry and suggests fixes). NOT inside item(): `item("oak_stairs[facing=north]")` is an error. Values read back from the server look the
+  same (`value::event_block_type` = `"minecraft:light_weighted_pressure_plate[power=0]"`).
+Selection (`select::...`) and mobs
+- In a NO_TARGET process (and in top-level world code) after `select::player_by_name([name])` /
+  `select::entity_by_name([uuid])` / `select::all_mobs()`, actions WITHOUT `<selector>` (`player::message`,
+  `entity::damage`, `entity::remove`) act on the selection. `value::x<current>` READS the selection (verified:
+  `value::health<current>` = the mob's 200, `value::uuid<current>` = its uuid); `value::x` WITHOUT a selector does not (0). Checked with one player: that nobody else is
+  affected is not checked.
+- Another way to READ a selected entity's values is a process for it: `select::entity_by_name([u])` +
+  `code::start_process("p", target_mode = "FOR_EACH_IN_SELECTION")` — inside `p`, `value::health`, `value::uuid`
+  are that entity's (verified with the process started from a PLAYER event; started from a NO_TARGET process it
+  is not checked). `CURRENT_SELECTION`, and a player event after `select`, still read the PLAYER's `value::`.
+- After `select::reset()` in a NO_TARGET process an action without `<selector>` reaches nobody; the line goes on.
+- `select::entity_by_name(["no such"])` + `entity::remove()` removes nothing and raises no error.
+- `world::spawn_mob(item("zombie_spawn_egg"), loc, 200, "&4&lKing")`: health 200 works (no set_max_health needed);
+  right after it `value::uuid<last_entity>` is that mob's uuid (checked in a player event). Its name comes back
+  with § codes (`§4§lKing`) — do not compare names.
+- `world::has_entity([uuid])` is true for a live mob, false for `""`.
+- EVERYTHING code builds or spawns PERSISTS through `/play` and `/build`: blocks (`set_block`, `set_region`...),
+  mobs, armor stands, displays, NPCs. Top-level (world_start) code runs on EVERY world start, so an unguarded
+  `world::spawn_mob(...)` / `spawn_armor_stand` / `spawn_text_display` there adds ANOTHER copy each start (the compiler
+  warns). Spawn a static NPC once: keep its uuid in a `save var` and spawn only if it is gone —
+  `save var npc = ""` is WRONG (a save var with a value is reset every start, see Variables); use
+  `save var npc` + `npc ??= ""`, then `if (!world::has_entity([npc])) { world::spawn_mob(...); npc = value::uuid<last_entity> }`
+  (verified: uuid<last_entity> works in world code too, and after a second /play there is still ONE NPC).
+  A message sent by world code right at start can miss a player re-entering after /play: `code::wait(2, time_unit = "seconds")` first.
+  Blocks: setting the same block again is harmless; just do not build something whose old copy would be in the way.
+- Mobs SURVIVE `/play` (world restart) while `game var`s holding their uuids are reset. Remove every mob with
+  `select::all_mobs()` + `entity::remove()` in world code (removes ALL mobs in the world) or keep the uuids in a
+  `save var` (docs/recipes-boss.jc).
+- `entity::damage(5, "PlayerName")` on a selected mob counts as that player's attack: `player_damage_entity` fires
+  with `%player%` = that player, `value::event_damage_cause` = `entity_attack`, `value::event_final_damage` filled
+  (4.92 with armour). Without a source the cause is `custom`.
+- In `entity_take_damage` `value::health` is the health BEFORE the hit; `value::event_final_damage` is what it takes.
+- A zombie burns by day: `entity_combust` with `value::event_combust_reason` = `unknown`, then `fire_tick` damage
+  1 per second. Whether `world::cancel_event()` stops it is not checked.
+Not verified, but standard Minecraft / JustMC behaviour
+- The action bar fades after a few seconds. For a permanent HUD refresh it every 20 ticks from a per-player
+  loop: `event<player_join> { repeat::forever() { player::action_bar("..."); code::wait(20) } }`.
+- Acting on all players from a world loop with the selector `<all_players>` (`player::message<all_players>(...)`).
+OPEN questions (do not rely on either answer)
+- #9: whose name `%player%` (`%killer%`, ...) becomes inside a text sent with `<all_players>` — maybe each
+  recipient's own. Capture first: `line var who = "%player%"`, then `player::message<all_players>("$who ...")`.
+- #10: who the default player is in `player_kill_player` (killer or victim). Use `%killer%`/`%victim%`,
+  `<killer_player>`/`<victim_player>`, `value::x<killer_entity>`.
+
+## Not in the language
+`while/for` keywords (use repeat::), `switch` (use match), `finally`, ternary, `??` as an expression (only `x ??= v`), comparisons outside conditions, string `+`,
+map literals, classes (inheritance, methods — `struct` is plain fields), kind types on variables (`var x: list` is an
+error: a variable's kind comes from its value; `: Type` on a variable — only your own enum / struct; kinds
+`number|text|list|map|…` — only on function parameters: `function f(x: list)`).

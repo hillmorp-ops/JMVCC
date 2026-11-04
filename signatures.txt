@@ -1,0 +1,1316 @@
+# JustCode: все сигнатуры (сгенерировано `jmvcc reference`)
+# Формат: object::name(arg: type, ...). type[N] — список до N значений,
+# A|B — перечисление (если не передать — первое значение или =X; …(N) — полностью: jmvcc sig <имя> --full), boolean=TRUE — что подставится,
+# number(ticks) — единица из меню сервера, var x = ... — действие возвращает значение,
+# { x -> } — переменные цикла. Имя — своё (JMVCC), если есть; «на сервере: …» — серверное имя (тоже работает),
+# «также: …» — синонимы, «список» / «словарь» / «текст» — ветка имени по виду получателя (l.sort / m.sort).
+# id действия и id без префикса тоже работают (с предупреждением).
+# Описание любого имени: `jmvcc sig <имя>` (действие, value::x, event<x>, фабрика).
+
+## player
+player::cursor_item_equals(items: item[18], comparison_mode: EXACTLY|IGNORE_STACK_SIZE|IGNORE_DURABILITY_AND_STACK_SIZE|TYPE_ONLY)  [условие: if (...) { }]
+player::has_item(items: item[18], check_mode: ANY|ALL, comparison_mode: EXACTLY|IGNORE_STACK_SIZE|IGNORE_DURABILITY_AND_STACK_SIZE|TYPE_ONLY)  [условие: if (...) { }]
+player::has_item_at_least(item: item, count: number, comparison_mode: EXACTLY|TYPE_ONLY)  [условие: if (...) { }]
+player::has_item_in_slot(items: item[12], slots: number[12], comparison_mode: EXACTLY|IGNORE_STACK_SIZE|IGNORE_DURABILITY_AND_STACK_SIZE|TYPE_ONLY)  [условие: if (...) { }]
+player::has_room_for_item(items: item[18], check_mode: ANY|ALL, checked_slots: ENTIRE_INVENTORY|MAIN_INVENTORY|UPPER_INVENTORY|HOTBAR|ARMOR)  [условие: if (...) { }]
+player::menu_slot_equals(items: item[12], slots: number[12], comparison_mode: EXACTLY|IGNORE_STACK_SIZE|IGNORE_DURABILITY_AND_STACK_SIZE|TYPE_ONLY)  // на сервере: inventory_menu_slot_equals  [условие: if (...) { }]
+player::is_holding(items: item[18], hand_slot: EITHER_HAND|MAIN_HAND|OFF_HAND, comparison_mode: EXACTLY|IGNORE_STACK_SIZE|IGNORE_DURABILITY_AND_STACK_SIZE|TYPE_ONLY)  [условие: if (...) { }]
+player::item_group_is_not_on_cooldown(item_keys: text[18], check_mode: ANY|ALL)  [условие: if (...) { }]
+player::item_is_not_on_cooldown(items: item[18], check_mode: ANY|ALL)  [условие: if (...) { }]
+player::is_using_item(items: item[18], comparison_mode: EXACTLY|IGNORE_STACK_SIZE|IGNORE_DURABILITY_AND_STACK_SIZE|TYPE_ONLY)  [условие: if (...) { }]
+player::is_wearing_item(items: item[18], check_mode: ANY|ALL, comparison_mode: EXACTLY|IGNORE_STACK_SIZE|IGNORE_DURABILITY_AND_STACK_SIZE|TYPE_ONLY)  [условие: if (...) { }]
+player::collides_at_location(location: location)  [условие: if (...) { }]
+player::collides_using_hitbox(min: location, max: location)  [условие: if (...) { }]
+player::collides_with_entity(name_or_uuid: text, check_type: OVERLAPS|CONTAINS)  [условие: if (...) { }]
+player::in_area(location_1: location, location_2: location, ignore_y_axis: boolean=TRUE, intersect_type: POINT|HITBOX, check_type: OVERLAPS|CONTAINS)  [условие: if (...) { }]
+player::is_looking_at_block(blocks: item[15], locations: location[15], distance: number, fluid_mode: NEVER|SOURCE_ONLY|ALWAYS)  [условие: if (...) { }]
+player::is_near(ignore_y_axis: boolean=TRUE, location: location, range: number)  [условие: if (...) { }]
+player::is_standing_on_block(blocks: item[20], locations: location[20], only_solid: boolean=FALSE)  [условие: if (...) { }]
+player::chat_message_equals(chat_messages: text[18], ignore_case: boolean=TRUE)  [условие: if (...) { }]
+player::gamemode_equals(gamemode: SURVIVAL|CREATIVE|ADVENTURE|SPECTATOR)  [условие: if (...) { }]
+player::has_input(input_type: FORWARD|BACKWARDS|LEFT|RIGHT|JUMP|SNEAK|…(7))  [условие: if (...) { }]
+player::has_potion_effect(potions: potion[18], check_mode: ANY|ALL)  [условие: if (...) { }]
+player::has_permission(privilege: BUILDER|DEVELOPER|BUILDER_AND_DEVELOPER|WHITELISTED|OWNER, exact: boolean=FALSE)  // на сервере: has_privilege  [условие: if (...) { }]
+player::hotbar_slot_equals(slot: number)  [условие: if (...) { }]
+player::inventory_type_open(inventory_type: CHEST|DISPENSER|DROPPER|FURNACE|WORKBENCH|CRAFTING|…(26))  [условие: if (...) { }]
+player::is_riding_entity(entity_ids: text[18], compare_mode: TYPE|NAME_OR_UUID)  [условие: if (...) { }]
+player::name_equals(names_or_uuids: text[18])  [условие: if (...) { }]
+player::is_allow_server_listing()  [условие: if (...) { }]
+player::chat_colors_enabled()  [условие: if (...) { }]
+player::is_blocking()  [условие: if (...) { }]
+player::is_disguised()  [условие: if (...) { }]
+player::is_flying()  [условие: if (...) { }]
+player::is_gliding()  [условие: if (...) { }]
+player::is_on_ground()  [условие: if (...) { }]
+player::is_online_mode()  [условие: if (...) { }]
+player::is_self_disguised()  [условие: if (...) { }]
+player::is_sleeping()  [условие: if (...) { }]
+player::is_sneaking()  [условие: if (...) { }]
+player::is_sprinting()  [условие: if (...) { }]
+player::is_swimming()  [условие: if (...) { }]
+player::is_transferred()  [условие: if (...) { }]
+player::text_filtering_enabled()  [условие: if (...) { }]
+player::disguise_as_block(block: item, visible_to_self: boolean=TRUE)
+player::disguise_as_entity(entity_type: item, visible_to_self: boolean=TRUE)
+player::disguise_as_item(item: item, visible_to_self: boolean=TRUE)
+player::mimic_disguise_from_entity(name_or_uuid: text, include_disguise: boolean=TRUE, disguise: ALL|EVERYONE_BUT_NOT_SELF|ONLY_SELF, remove_original_entity: boolean=FALSE)
+player::play_animation(animation: DAMAGE|WAKE_UP|TOTEM|JUMPSCARE)
+player::play_hurt_animation(yaw: number)
+player::remove_disguise()
+player::remove_pose()
+player::remove_self_disguise()
+player::remove_skin()
+player::self_disguise_as_block(block: item)
+player::self_disguise_as_entity(entity_type: item)
+player::self_disguise_as_item(item: item)
+player::set_arrows_in_body(amount: number)
+player::set_bee_stingers_in_body(amount: number)
+player::set_pose(pose: CROAKING|DIGGING|DYING|EMERGING|FALL_FLYING|LONG_JUMPING|…(14), locked: boolean=TRUE)
+player::set_skin(name_or_uuid: text, server_type: MOJANG|SERVER|SERVER_DEFAULT)
+player::set_visual_fire(visual_fire: TRUE|FALSE|NOT_SET)
+player::swing_hand(hand_type: MAIN|OFF)
+player::clear_chat()
+player::close_dialog_menu()
+player::open_book(book: item)
+player::play_sound(sound: sound, location: location)
+player::play_sound_from_entity(sounds: sound[21], name_or_uuid: text)
+player::play_sound_sequence(sounds: sound[43], delay: number(ticks), location: location)
+player::remove_boss_bar(id: text)
+player::action_bar(messages: text[18], merging: SPACES|CONCATENATION)
+player::send_advancement(frame: TASK|CHALLENGE|GOAL, name: text, icon: item)
+player::dialogue(messages: text[17], delay: number)
+player::send_hover(message: text, hover: text)
+player::message(messages: text[18], merging: SPACES|CONCATENATION|SEPARATE_LINES)
+player::send_minimessage(minimessage: text)
+player::title(title: text, subtitle: text, fade_in: number(ticks), stay: number(ticks), fade_out: number(ticks))
+player::set_boss_bar(id: text, title: text, progress: number, color: PINK|BLUE|RED|GREEN|YELLOW|PURPLE|…(7), style: PROGRESS|NOTCHED_6|NOTCHED_10|NOTCHED_12|NOTCHED_20, sky_effect: NONE|FOG|DARK_SKY|FOG_AND_DARK_SKY)
+player::set_chat_completions(completions: text[18], setting_mode: ADD|SET|REMOVE)
+player::set_player_list_info(text: text[16], position: HEADER|FOOTER, merging: SPACES|CONCATENATION|SEPARATE_LINES)
+player::show_demo_screen()
+player::show_dialog_menu_from_nbt(dialog_nbt: text)
+player::show_win_screen()
+player::stop_sound(sounds: sound[18])
+player::stop_sounds_by_source(source: AMBIENT|BLOCK|HOSTILE|MASTER|MUSIC|NEUTRAL|…(10))
+player::add_menu_row(items: item[9], position: TOP|BUTTON)
+player::close_menu()
+player::expand_menu(items: item[27], size: number)
+player::open_container_inventory(location: location)
+player::open_ender_chest()
+player::open_working_menu(title: text, menu_type: CRAFTING|ANVIL|SMITHING|CARTOGRAPHY_TABLE|LOOM|GRINDSTONE|…(8))
+player::remove_menu_row(size: number, position: TOP|BUTTON)
+player::set_menu_id(custom_id: text)  // на сервере: set_inventory_menu_custom_id
+player::set_menu_item(item: item, slot: number)
+player::set_menu_name(text: text)
+player::show_menu(items: item[27], name: text, inventory_type: CHEST|DISPENSER|DROPPER|FURNACE|WORKBENCH|ENCHANTING|…(17), custom_id: text)
+player::stop_using_item()  // на сервере: clear_active_item
+player::clear_ender_chest_contents()
+player::clear_inventory(clear_mode: ENTIRE|MAIN|UPPER|HOTBAR|ARMOR)
+player::clear_items(items: item[18])
+player::finish_using_item()  // на сервере: complete_using_active_item
+player::give_item(items: item[17], amount: number)  // на сервере: give_items
+player::give_random_item(items: item[27])
+player::load_inventory()
+player::remove_item(items: item[18])  // на сервере: remove_items
+player::replace_items(items: item[28], replace: item, count: number)
+player::save_inventory()
+player::set_armor(helmet: item, chestplate: item, leggings: item, boots: item)
+player::set_cursor_item(item: item)
+player::set_ender_chest_contents(items: item[27])
+player::set_equipment(item: item, slot: CHEST|FEET|HAND|HEAD|LEGS|OFF_HAND)
+player::set_item_cooldown(item: item, cooldown: number(ticks), sound: sound)
+player::set_item_group_cooldown(key: text, cooldown: number)
+player::set_items(items: item[36])
+player::set_slot_item(item: item, slot: number)
+player::start_using_item(equipment: MAIN_HAND|OFF_HAND)
+player::connect_to_server(server_name: text)
+var variable = player::get_nbt(path: text[21], value_type: ANY_VALUE|NBT_STRING)
+player::hide_custom_recipe(names: text[27], is_vanilla_recipe: boolean=FALSE)
+player::hide_scoreboard()
+player::kick()
+player::redirect_world(world_id: text)
+player::show_custom_recipe(names: text[27], is_vanilla_recipe: boolean=FALSE)
+player::show_scoreboard(id: text)
+player::transfer_to_other_server(domain: text, port: number)
+player::boost_elytra(firework: item)
+player::face_location(location: location)
+player::launch_forward(power: number, increment: boolean=TRUE, launch_axis: YAW_AND_PITCH|YAW)
+player::launch_to_location(location: location, power: number, increment: boolean=TRUE)
+player::launch_up(power: number, increment: boolean=TRUE)
+player::leave_vehicle()
+player::randomized_teleport(locations: location[18], keep_rotation: boolean=TRUE, keep_velocity: boolean=FALSE, dismount: boolean=TRUE)
+player::ride_entity(name_or_uuid: text)
+player::set_flying(is_flying: boolean=TRUE)
+player::set_gliding(is_gliding: boolean=TRUE)
+player::set_rotation(yaw: number, pitch: number)
+player::set_rotation_by_vector(vector: vector)
+player::set_velocity(velocity: vector, increment: boolean=TRUE)
+player::spectate_target(name_or_uuid: text)
+player::teleport(location: location, keep_rotation: boolean=TRUE, keep_velocity: boolean=FALSE, dismount: boolean=TRUE)
+player::teleport_sequence(delay: number(ticks), locations: location[14])
+player::clear_potion_effects()
+player::damage(damage: number, source: text)
+var variable = player::get_attribute(attribute_type: GENERIC_MAX_HEALTH|GENERIC_MAX_ABSORPTION|GENERIC_FOLLOW_RANGE|GENERIC_KNOCKBACK_RESISTANCE|GENERIC_MOVEMENT_SPEED|GENERIC_FLYING_SPEED|…(40), return_value: VALUE|BASE_VALUE|DEFAULT_VALUE)
+player::give_experience(experience: number, mode: POINTS|LEVEL|LEVEL_PERCENTAGE)
+player::give_potion_effect(potions: potion[18], overwrite: boolean=TRUE, show_icon: boolean=TRUE, particle_mode: REGULAR|AMBIENT|NONE)  // также: add_potion_effect
+player::heal(heal: number)
+player::remove_potion_effect(potions: potion[18])
+player::set_absorption_health(health: number)
+player::set_air_ticks(ticks: number(ticks))
+player::set_attack_speed(speed: number)
+player::set_attribute(value: number, attribute_type: GENERIC_MAX_HEALTH|GENERIC_MAX_ABSORPTION|GENERIC_FOLLOW_RANGE|GENERIC_KNOCKBACK_RESISTANCE|GENERIC_MOVEMENT_SPEED|GENERIC_FLYING_SPEED|…(40))
+player::set_death_screen_score(score: number)
+player::set_enchantment_seed(seed: number)
+player::set_exhaustion(exhaustion: number, mode: SET|ADD)
+player::set_experience(experience: number, mode: POINTS|LEVEL|LEVEL_PERCENTAGE)
+player::set_fall_distance(distance: number)
+player::set_fire_ticks(ticks: number(ticks))
+player::set_hunger(food: number, mode: SET|ADD)  // на сервере: set_food
+player::set_freeze_ticks(ticks: number(ticks), ticking_locked: boolean=TRUE)
+player::set_health(health: number)
+player::set_hotbar_slot(slot: number)
+player::set_invulnerability_ticks(ticks: number(ticks))
+player::set_max_health(health: number, heal: boolean=TRUE)
+player::set_max_invulnerability_ticks(ticks: number(ticks))
+player::set_movement_speed(distance: number, movement_type: WALK|FLY)
+player::set_saturated_regen_rate(rate: number(ticks))
+player::set_saturation(saturation: number, mode: SET|ADD)
+player::set_starvation_rate(rate: number(ticks))
+player::set_unsaturated_regen_rate(rate: number(ticks))
+player::display_lightning(location: location)
+player::display_particle(particle: particle[20], location: location[20])
+player::display_particle_circle(particle: particle, center: location, radius: number, points: number, start_angle: number, perpendicular: vector, angle_unit: DEGREES|RADIANS)
+player::display_particle_cube(particle: particle, first_corner: location, second_corner: location, spacing: number, type: SOLID|HOLLOW|WIREFRAME)
+player::display_particle_line(particle: particle, start: location, end: location, divider: number, unit_of_measurement: POINTS|DISTANCE)
+player::display_particle_ray(particle: particle, start: location, ray: vector, divider: number, unit_of_measurement: POINTS|DISTANCE)
+player::display_particle_sphere(particle: particle, center: location, radius: number, points: number)
+player::display_particle_spiral(particle: particle, center: location, distance: number, radius: number, points: number, rotations: number, start_angle: number, angle_unit: DEGREES|RADIANS)
+player::display_vibration(from: location, to: location, destination_time: number(ticks))
+player::allow_placing_breaking_blocks(allow: boolean=TRUE, blocks: item[18])
+player::reset_waypoint_color()
+player::set_allow_flying(allow_flying: boolean=TRUE)
+player::set_collidable(collidable: boolean=TRUE)
+player::set_death_drops(death_drops: boolean=TRUE)
+player::set_default_visible(default_visible: boolean=FALSE)
+player::set_gamemode(gamemode: SURVIVAL|CREATIVE|ADVENTURE|SPECTATOR, flight_mode: RESPECT_GAMEMODE|KEEP_ORIGINAL)
+player::set_instant_respawn(instant_respawn: boolean=TRUE)
+player::set_keep_inventory(kept: boolean=TRUE)  // на сервере: set_inventory_kept
+player::set_nametag_visible(visible: boolean=TRUE)
+player::set_pvp(pvp: boolean=TRUE)
+player::set_spawn_point(spawn_point: location)
+player::set_waypoint_color(red: number, green: number, blue: number)
+player::set_waypoint_style(style: text)
+player::clear_debug_markers()
+player::display_bell_ring(location: location, direction: DOWN|NORTH|SOUTH|WEST|EAST)
+player::display_block(location: location[27], block: item)
+player::set_block_opened_state(location: location, is_opened: boolean=TRUE)
+player::display_end_gateway_beam(location: location, color: LIGHT_PURPLE|DARK_PURPLE)
+player::display_hologram(location: location, text: text)
+player::display_pick_up_animation(collected_name_or_uuid: text, collector_name_or_uuid: text, amount: number)
+player::display_sign_text(location: location, line_1: text, line_2: text, line_3: text, line_4: text, side: FRONT|BACK|ALL)
+player::hide_entity(name_or_uuid: text[14], hide: boolean=TRUE)
+player::launch_projectile(projectile: item, location: location, name: text, speed: number, inaccuracy: number, trail: particle)
+player::remove_display_blocks(pos_1: location, pos_2: location)
+player::remove_world_border()
+player::reset_weather()
+player::send_break_animation(locations: location[14], stage: number)
+player::set_compass_target(location: location)
+player::set_entity_glowing(name_or_uuid: text[14], color: WHITE|GRAY|DARK_GRAY|BLACK|DARK_RED|RED|…(16), glow: boolean=TRUE)
+player::set_view_distance(distance: number)  // на сервере: set_fog_distance
+player::set_rain_level(rain_level: number)
+player::set_simulation_distance(distance: number)
+player::set_thunder_level(thunder_level: number)
+player::set_tick_rate(tick_rate: number(ticks))
+player::set_time(time: number(ticks))
+player::set_weather(weather_type: DOWNFALL|CLEAR)
+player::set_world_border(center: location, size: number, warning: number)
+player::shift_world_border(old_size: number, size: number, time: number)
+player::show_debug_marker(location: location, name: text, duration: number(ms), red: number, green: number, blue: number, alpha: number)
+
+## variable
+var variable = variable::get_tile_block_custom_tag(location: location, tag_name: text, default_value: any)  // или location.get_tile_block_custom_tag(...)
+var variable = variable::get_tile_block_nbt(location: location, path: text[21], value_type: ANY_VALUE|NBT_STRING)  // или location.get_tile_block_nbt(...)
+variable::block_equals(value: item, compare: item[21])  [условие: if (...) { }]
+variable::block_is_minecraft_tagged(block: item, namespace: text)  [условие: if (...) { }]
+variable::block_is_solid(block: item)  [условие: if (...) { }]
+variable::equals(value: any, compare: any[21], compare_type: ANY|ALL)  // или value.equals(...)  [условие: if (...) { }]
+variable::exists(variable: variable[27], compare_type: ANY|ALL)  // или variable.exists(...)  [условие: if (...) { }]
+variable::greater(value: number, compare: number)  // или value.greater(...)  [условие: if (...) { }]
+variable::greater_or_equals(value: number, compare: number)  // или value.greater_or_equals(...)  [условие: if (...) { }]
+variable::in_range(value: any, min: any, max: any)  // или value.in_range(...)  [условие: if (...) { }]
+variable::is_type(value: any[27], variable_type: NUMBER|TEXT|LOCATION|ITEM|POTION|SOUND|…(10), compare_type: ANY|ALL)  // или value.is_type(...)  [условие: if (...) { }]
+variable::item_equals(value: item, compare: item[21], comparison_mode: EXACTLY|IGNORE_STACK_SIZE|IGNORE_DURABILITY_AND_STACK_SIZE|TYPE_ONLY)  // или value.item_equals(...)  [условие: if (...) { }]
+variable::item_has_enchantment(item: item, enchant: text, level: number, enchantment_type: NORMAL|STORED|BOTH)  [условие: if (...) { }]
+variable::item_has_stored_enchantment(item: item, enchant: text, level: number)  [условие: if (...) { }]
+variable::item_has_tag(item: item, tag: text, value: text[21], compare_type: EQUALS|CONTAINS|STARTS_WITH|ENDS_WITH)  // или item.item_has_tag(...)  [условие: if (...) { }]
+variable::item_is_block(item: item)  [условие: if (...) { }]
+variable::item_is_minecraft_tagged(item: item, namespace: text)  [условие: if (...) { }]
+variable::less(value: number, compare: number)  // или value.less(...)  [условие: if (...) { }]
+variable::less_or_equals(value: number, compare: number)  // или value.less_or_equals(...)  [условие: if (...) { }]
+variable::contains(list: variable, values: any[21], check_mode: ANY|ALL)  // или list.contains(...); список; на сервере: list_contains_value  [условие: if (...) { }]
+variable::list_value_equals(list: variable, index: number, values: any[21])  // или list.list_value_equals(...)  [условие: if (...) { }]
+variable::location_in_range(value: location, min: location, max: location, border_handling: EXACT|BLOCK|FULL_BLOCK_RANGE)  [условие: if (...) { }]
+variable::location_is_near(location: location, radius: number, check: location[18], shape: SPHERE|CIRCLE|CUBE|SQUARE)  // или location.location_is_near(...)  [условие: if (...) { }]
+variable::has_key(map: variable, key: any[21], check_mode: ANY|ALL)  // или map.has_key(...); на сервере: map_has_key  [условие: if (...) { }]
+variable::map_value_equals(map: variable, key: any, values: any[21])  // или map.map_value_equals(...)  [условие: if (...) { }]
+variable::multiple_equals(values: any[20], compares: any[20], compare_type: ANY|ALL)  [условие: if (...) { }]
+variable::not_equals(value: any, compare: any[21])  // или value.not_equals(...)  [условие: if (...) { }]
+variable::number_in_range(value: number, min: number, max: number, including: NOT_INCLUDE|INCLUDE_FIRST|INCLUDE_LAST|INCLUDE_ALL)  [условие: if (...) { }]
+variable::range_intersects_range(min1: location, max1: location, min2: location, max2: location, check_type: OVERLAPS|CONTAINS)  [условие: if (...) { }]
+variable::contains(value: text, compare: text[21], ignore_case: boolean=FALSE)  // или value.contains(...); текст; на сервере: text_contains  [условие: if (...) { }]
+variable::ends_with(value: text, compare: text[21], ignore_case: boolean=FALSE)  // или value.ends_with(...); на сервере: text_ends_with  [условие: if (...) { }]
+variable::text_matches(match: text, values: text[21], ignore_case: boolean=FALSE, regular_expressions: boolean=FALSE)  // или match.text_matches(...)  [условие: if (...) { }]
+variable::starts_with(value: text, compare: text[21], ignore_case: boolean=FALSE)  // или value.starts_with(...); на сервере: text_starts_with  [условие: if (...) { }]
+variable::is_empty(list: any[27], compare_type: ANY|ALL)  // или list.is_empty(...); на сервере: list_is_empty  [условие: if (...) { }]
+var variable = variable::extend(list_1: variable, list_2: variable)  // или list_1.extend(...); на сервере: list_append_list
+var variable = variable::append_lists(lists: variable)  // или lists.append_lists(...)
+variable::append(variable: variable, values: any[21])  // или variable.append(...); также: push; на сервере: list_append_value
+var variable = variable::chunk(list: variable, size: number)  // или list.chunk(...); список; на сервере: chunk_list
+var variable = variable::create_list(values: any[21])
+variable::destructure_list(variables: variable[21], list: variable)
+var variable = variable::flatten(list: variable, deep: boolean=TRUE)  // или list.flatten(...); на сервере: flatten_list
+var variable = variable::index_of(list: variable, value: any, search_mode: FIRST|LAST)  // или list.index_of(...); список; на сервере: get_list_index_of_value
+var variable = variable::length(list: variable)  // или list.length(...); список; также: size; на сервере: get_list_length
+var variable = variable::get_list_random_value(list: variable)  // или list.random(...); список
+var variable = variable::get(list: variable, number: number, default_value: any)  // или list.get(...); список; на сервере: get_list_value
+var variable = variable::insert(list: variable, number: number, value: any)  // или list.insert(...); на сервере: insert_list_value
+var variable = variable::shuffle(list: variable)  // или list.shuffle(...); список; на сервере: randomize_list_order
+var variable = variable::unique(list: variable)  // или list.unique(...); на сервере: remove_list_duplicates
+var variable = variable::remove_list_value(list: variable, value: any, remove_mode: FIRST|LAST|ALL)  // или list.remove(...); список
+var variable = variable::remove_at(list: variable, index: number, removed_value: variable)  // или list.remove_at(...); на сервере: remove_list_value_at_index
+var variable = variable::reverse(list: variable)  // или list.reverse(...); список; на сервере: reverse_list
+var variable = variable::set(list: variable, number: number, value: any)  // или list.set(...); список; на сервере: set_list_value
+var variable = variable::sort(list: variable, sort_mode: ASCENDING|DESCENDING)  // или list.sort(...); список; на сервере: sort_any_list
+var variable = variable::slice(list: variable, start: number, end: number)  // или list.slice(...); список; на сервере: trim_list
+var variable = variable::append_component(components: text[21], merging: SPACES|CONCATENATION|SEPARATE_LINES)
+var variable = variable::change_component_parsing(component: text, parsing: PLAIN|LEGACY|MINIMESSAGE|JSON)  // или component.change_component_parsing(...)
+var variable = variable::compact_component(component: text)  // или component.compact_component(...)
+var variable = variable::component_of_children(components: text[21])
+var variable = variable::create_head_object_component(name_or_uuid: text, hat: boolean=TRUE)  // или name_or_uuid.create_head_object_component(...)
+var variable = variable::create_keybind_component(key: text)  // или key.create_keybind_component(...)
+var variable = variable::create_sprite_object_component(sprite: text, atlas: text)  // или sprite.create_sprite_object_component(...)
+var variable = variable::create_translatable_component(key: text, fallback: text, args: text[35])  // или key.create_translatable_component(...)
+var variable = variable::get_component_children(component: text)  // или component.get_component_children(...)
+var variable = variable::get_component_decorations(component: text)  // или component.get_component_decorations(...)
+var variable = variable::get_component_hex_color(component: text)  // или component.get_component_hex_color(...)
+var variable = variable::get_component_parsing(component: text)  // или component.get_component_parsing(...)
+var variable = variable::join_to_component(list: variable, separator: text, prefix: text, suffix: text)  // или list.join_to_component(...)
+var variable = variable::parse_to_component(text: text, parsing: PLAIN|LEGACY|MINIMESSAGE|JSON)  // или text.parse_to_component(...)
+var variable = variable::set_component_children(component: text, children: text[21])  // или component.set_component_children(...)
+var variable = variable::set_component_click(component: text, value: text, click_action: COPY_TO_CLIPBOARD)  // или component.set_component_click(...)
+var variable = variable::set_component_decorations(component: text, bold: FALSE|NOT_SET|TRUE, italic: FALSE|NOT_SET|TRUE, underlined: FALSE|NOT_SET|TRUE, strikethrough: FALSE|NOT_SET|TRUE, obfuscated: FALSE|NOT_SET|TRUE)  // или component.set_component_decorations(...)
+var variable = variable::set_component_entity_hover(component: text, name_or_uuid: text)  // или component.set_component_entity_hover(...)
+var variable = variable::set_component_font(component: text, namespace: text, value: text)  // или component.set_component_font(...)
+var variable = variable::set_component_hex_color(component: text, color: text)  // или component.set_component_hex_color(...)
+var variable = variable::set_component_hover(component: text, hover: text)  // или component.set_component_hover(...)
+var variable = variable::set_component_insertion(component: text, insertion: text)  // или component.set_component_insertion(...)
+var variable = variable::set_component_item_hover(component: text, hover: item)  // или component.set_component_item_hover(...)
+var variable = variable::set_component_shadow_color(component: text, color: text)  // или component.set_component_shadow_color(...)
+var variable = variable::add_item_enchantment(item: item, enchantment: text, level: number, enchantment_type: NORMAL|STORED|BOTH)  // или item.add_item_enchantment(...)
+var variable = variable::add_item_potion_effects(item: item, potions: potion[18], overwrite: boolean=TRUE, show_icon: boolean=TRUE, particle_mode: REGULAR|AMBIENT|NONE)  // или item.add_item_potion_effects(...)
+var variable = variable::add_item_stored_enchantment(item: item, enchantment: text, level: number)  // или item.add_item_stored_enchantment(...)
+var variable = variable::edit_item_custom_model_data(item: item, data: any[21], value_type: FLOATS, setup_mode: SET)  // или item.edit_item_custom_model_data(...)
+var variable = variable::get_block_material_property(block: item, property: HARDNESS|BLAST_RESISTANCE|SLIPPERINESS)  // или block.get_block_material_property(...)
+var variable = variable::get_blocks_by_tag(namespace: text, result_type: ID|TRANSLATION_KEY|ITEM)  // или namespace.get_blocks_by_tag(...)
+var variable = variable::get_book_text(book: item, page: number)  // или book.get_book_text(...)
+var variable = variable::get_bundle_items(bundle: item)  // или bundle.get_bundle_items(...)
+var variable = variable::get_compass_lodestone(item: item)  // или item.get_compass_lodestone(...)
+var variable = variable::get_item_amount(item: item)  // или item.get_item_amount(...)
+var variable = variable::get_item_attack_range(item: item, property: MIN_RANGE|MAX_RANGE|MIN_CREATIVE_RANGE|MAX_CREATIVE_RANGE|HITBOX_MARGIN|MOB_FACTORY)  // или item.get_item_attack_range(...)
+var variable = variable::get_item_attribute(item: item, name: text, attribute: GENERIC_ARMOR|GENERIC_ARMOR_TOUGHNESS|GENERIC_ATTACK_DAMAGE|GENERIC_ATTACK_KNOCKBACK|GENERIC_ATTACK_SPEED|GENERIC_FLYING_SPEED|…(40), slot: ALL|MAIN_HAND|OFF_HAND|HEAD|CHEST|LEGGINGS|…(10))  // или item.get_item_attribute(...)
+var variable = variable::get_item_break_sound(item: item)  // или item.get_item_break_sound(...)
+var variable = variable::get_item_color(item: item)  // или item.get_item_color(...)
+var variable = variable::get_item_component(item: item, component: text)  // или item.get_item_component(...)
+var variable = variable::get_item_contents(item: item)  // или item.get_item_contents(...)
+var variable = variable::get_item_custom_model_data(item: item)  // или item.get_item_custom_model_data(...)
+var variable = variable::get_item_custom_tag(item: item, tag_name: text, default_value: any)  // или item.get_item_custom_tag(...)
+var variable = variable::get_item_custom_tags(item: item)  // или item.get_item_custom_tags(...)
+var variable = variable::get_item_destroyable_blocks(item: item)  // или item.get_item_destroyable_blocks(...)
+var variable = variable::get_item_durability(item: item, durability_type: DAMAGE|DAMAGE_PERCENTAGE|REMAINING|REMAINING_PERCENTAGE|MAXIMUM)  // или item.get_item_durability(...)
+var variable = variable::get_item_effective_name(item: item)  // или item.get_item_effective_name(...)
+var variable = variable::get_item_enchantment(item: item, enchantment: text, enchantment_type: NORMAL|STORED|BOTH)  // или item.get_item_enchantment(...)
+var variable = variable::get_item_enchantments(item: item, enchantment_type: NORMAL|STORED|BOTH)  // или item.get_item_enchantments(...)
+var variable = variable::get_item_food_properties(item: item, property: NUTRITION|SATURATION)  // или item.get_item_food_properties(...)
+var variable = variable::get_item_lore(item: item)  // или item.get_item_lore(...)
+var variable = variable::get_item_lore_line(item: item, line: number)  // или item.get_item_lore_line(...)
+var variable = variable::get_item_type(type: item, value: ID|NAME|ITEM)  // или type.get_item_type(...)
+var variable = variable::get_item_max_stack_size(item: item)  // или item.get_item_max_stack_size(...)
+var variable = variable::get_item_minimum_attack_charge(item: item)  // или item.get_item_minimum_attack_charge(...)
+var variable = variable::get_item_model(item: item)  // или item.get_item_model(...); на сервере: get_item_model_data
+var variable = variable::get_item_name(item: item)  // или item.get_item_name(...)
+var variable = variable::get_item_nbt_tags(item: item, fetch_mode: ALL|CUSTOM_DATA)  // или item.get_item_nbt_tags(...)
+var variable = variable::get_item_placeable_blocks(item: item)  // или item.get_item_placeable_blocks(...)
+var variable = variable::get_item_potion_effects(item: item)  // или item.get_item_potion_effects(...)
+var variable = variable::get_item_rarity(item: item)  // или item.get_item_rarity(...)
+var variable = variable::get_items_by_tag(namespace: text, result_type: ID|TRANSLATION_KEY|ITEM)  // или namespace.get_items_by_tag(...)
+var variable = variable::get_item_sprite(item: item)  // или item.get_item_sprite(...)
+var variable = variable::get_item_stored_enchantments(item: item)  // или item.get_item_stored_enchantments(...)
+var variable = variable::get_item_swing_animation(item: item, property: DURATION|ANIMATION)  // или item.get_item_swing_animation(...)
+var variable = variable::get_item_tooltip_style(item: item)  // или item.get_item_tooltip_style(...)
+var variable = variable::get_item_use_remainder(item: item)  // или item.get_item_use_remainder(...)
+var variable = variable::get_item_weapon(item: item, property: ITEM_DAMAGE_PER_ATTACK|DISABLE_BLOCKING)  // или item.get_item_weapon(...)
+var variable = variable::get_player_head(name_or_uuid: text, receive_type: NAME_OR_UUID|VALUE)
+var variable = variable::get_player_head_owner(head: item, return_value: NAME|UUID|VALUE)  // или head.get_player_head_owner(...)
+var variable = variable::hide_item_components(item: item, components: text[21], mode: SET|ADD|REMOVE)  // или item.hide_item_components(...)
+var variable = variable::obtain_item_custom_model_data(item: item, value_type: FLOATS)  // или item.obtain_item_custom_model_data(...)
+var variable = variable::remove_compass_lodestone(item: item)  // или item.remove_compass_lodestone(...)
+var variable = variable::remove_item_attribute(item: item, name_or_uuid: text, attribute: GENERIC_MAX_HEALTH|GENERIC_MAX_ABSORPTION|GENERIC_FOLLOW_RANGE|GENERIC_KNOCKBACK_RESISTANCE|GENERIC_MOVEMENT_SPEED|GENERIC_FLYING_SPEED|…(40))  // или item.remove_item_attribute(...)
+var variable = variable::remove_item_custom_model_data(item: item)  // или item.remove_item_custom_model_data(...)
+var variable = variable::remove_item_custom_tag(item: item, tag_name: text[21])  // или item.remove_item_custom_tag(...)
+var variable = variable::remove_item_custom_tags(item: item)  // или item.remove_item_custom_tags(...)
+var variable = variable::remove_item_enchantment(item: item, enchantment: text, enchantment_type: NORMAL|STORED|BOTH)  // или item.remove_item_enchantment(...)
+var variable = variable::remove_item_lore_line(item: item, line: number)  // или item.remove_item_lore_line(...)
+var variable = variable::remove_item_potion_effects(item: item, effects: potion[18])  // или item.remove_item_potion_effects(...)
+var variable = variable::remove_item_stored_enchantment(item: item, enchantment: text)  // или item.remove_item_stored_enchantment(...)
+var variable = variable::set_armor_trim(armor: item, material: item, pattern: item)  // или armor.set_armor_trim(...)
+var variable = variable::set_book_page(book: item, text: text, page: number, mode: MERGE|APPEND)  // или book.set_book_page(...)
+var variable = variable::set_book_pages(book: item, text: text[21])  // или book.set_book_pages(...)
+var variable = variable::set_bundle_items(bundle: item, items: item[21], setting_mode: ADD|SET|REMOVE)  // или bundle.set_bundle_items(...)
+var variable = variable::set_compass_lodestone(item: item, location: location, tracked: boolean=TRUE)  // или item.set_compass_lodestone(...)
+var variable = variable::set_item_amount(item: item, amount: number)  // или item.set_item_amount(...)
+var variable = variable::set_item_attack_range(item: item, min_reach: number, min_max: number, min_creative_reach: number, max_creative_reach: number, hitbox_margin: number, mob_factor: number)  // или item.set_item_attack_range(...)
+var variable = variable::set_item_attribute(item: item, amount: number, name: text, attribute: GENERIC_ARMOR|GENERIC_ARMOR_TOUGHNESS|GENERIC_ATTACK_DAMAGE|GENERIC_ATTACK_KNOCKBACK|GENERIC_ATTACK_SPEED|GENERIC_FLYING_SPEED|…(40), slot: ALL|MAIN_HAND|OFF_HAND|HEAD|CHEST|LEGGINGS|…(10), operation: MULTIPLY_SCALAR_1|ADD_NUMBER|ADD_SCALAR)  // или item.set_item_attribute(...)
+var variable = variable::set_item_break_sound(item: item, break_sound: sound)  // или item.set_item_break_sound(...)
+var variable = variable::set_item_color(item: item, color: text)  // или item.set_item_color(...)
+var variable = variable::set_item_component(item: item, component: text, value: text)  // или item.set_item_component(...)
+var variable = variable::set_item_contents(item: item, items: item[21], setting_mode: ADD|SET|REMOVE)  // или item.set_item_contents(...)
+var variable = variable::set_item_custom_model_data(item: item, model: number)  // или item.set_item_custom_model_data(...)
+var variable = variable::set_item_custom_tag(item: item, tag_name: text[15], tag_value: text[15])  // или item.set_item_custom_tag(...)
+var variable = variable::set_item_destroyable_blocks(item: item, destroyable: item[18])  // или item.set_item_destroyable_blocks(...)
+var variable = variable::set_item_durability(item: item, durability: number, durability_type: DAMAGE|DAMAGE_PERCENTAGE|REMAINING|REMAINING_PERCENTAGE|MAX_DAMAGE)  // или item.set_item_durability(...)
+var variable = variable::set_item_enchantments(item: item, enchantments: variable, enchantment_type: NORMAL|STORED|BOTH)  // или item.set_item_enchantments(...)
+var variable = variable::set_item_food_properties(item: item, nutrition: number, saturation: number, can_always_eat: boolean=TRUE)  // или item.set_item_food_properties(...)
+var variable = variable::set_item_glider(item: item, glider: boolean=TRUE)  // или item.set_item_glider(...)
+var variable = variable::set_item_glint_override(item: item, glowing: TRUE|FALSE|NOT_SET)  // или item.set_item_glint_override(...)
+var variable = variable::set_item_hidden_tooltip(item: item, tooltip_hidden: boolean=TRUE)  // или item.set_item_hidden_tooltip(...)
+var variable = variable::set_item_lore(lore: text[21], item: item)  // или item.set_item_lore(...)
+var variable = variable::set_item_lore_line(item: item, text: text, line: number, mode: MERGE|APPEND)  // или item.set_item_lore_line(...)
+var variable = variable::set_item_type(item: item, type: text)  // или item.set_item_type(...)
+var variable = variable::set_item_max_stack_size(item: item, size: number)  // или item.set_item_max_stack_size(...)
+var variable = variable::set_item_minimum_attack_charge(item: item, minimum_attack_charge: number)  // или item.set_item_minimum_attack_charge(...)
+var variable = variable::set_item_model(item: item, model: text)  // или item.set_item_model(...); на сервере: set_item_model_data
+var variable = variable::set_item_name(item: item, text: text)  // или item.set_item_name(...)
+var variable = variable::set_item_piercing_weapon(item: item, deals_knockback: boolean=TRUE, dismounts: boolean=TRUE, sound: sound, hit_sound: sound)  // или item.set_item_piercing_weapon(...)
+var variable = variable::set_item_placeable_blocks(item: item, placeable: item[18])  // или item.set_item_placeable_blocks(...)
+var variable = variable::set_item_rarity(item: item, rarity: NONE|COMMON|UNCOMMON|RARE|EPIC)  // или item.set_item_rarity(...)
+var variable = variable::set_item_swing_animation(item: item, duration: number, animation: NONE|WHACK|STAB)  // или item.set_item_swing_animation(...)
+var variable = variable::set_item_tooltip_style(item: item, style: text)  // или item.set_item_tooltip_style(...)
+var variable = variable::set_item_unbreakable(item: item, unbreakable: boolean=TRUE)  // или item.set_item_unbreakable(...)
+var variable = variable::set_item_use_effects(item: item, can_sprint: boolean=TRUE, interact_vibrations: boolean=TRUE, speed_multiplier: number)  // или item.set_item_use_effects(...)
+var variable = variable::set_item_use_remainder(item: item, remainder: item)  // или item.set_item_use_remainder(...)
+var variable = variable::set_item_visibility_flags(item: item, hide_dye: ON|NO_CHANGE|OFF, hide_enchantments: ON|NO_CHANGE|OFF, hide_attributes: ON|NO_CHANGE|OFF, hide_unbreakable: ON|NO_CHANGE|OFF, hide_place_on: ON|NO_CHANGE|OFF, hide_destroys: ON|NO_CHANGE|OFF, hide_potion_effects: ON|NO_CHANGE|OFF, hide_armor_trim: ON|NO_CHANGE|OFF)  // или item.set_item_visibility_flags(...)
+var variable = variable::set_item_weapon(item: item, item_damage_per_attack: number, disable_blocking: number)  // или item.set_item_weapon(...)
+var variable = variable::set_texture_to_map(map: item, url: text)  // или map.set_texture_to_map(...)
+var variable = variable::unset_item_components(item: item, components: text[21])  // или item.unset_item_components(...)
+var variable = variable::align_location(location: location, rotation_mode: KEEP|REMOVE, coordinates_mode: ALL|X_Z|Y, align_mode: BLOCK_CENTER|CORNER)  // или location.align_location(...)
+var variable = variable::center_location(locations: location[21])  // или locations.center_location(...)
+var variable = variable::clamp_location(location: location, corner_1: location, corner_2: location, coordinates_mode: XYZ|XZ|Y)  // или location.clamp_location(...)
+var variable = variable::face_location(location: location, target: location)  // или location.face_location(...)
+var variable = variable::find_nearest_location(location: location, locations: location[21], distance_type: XYZ|XZ|Y, compare_mode: NEAREST|FARTHEST)  // или location.find_nearest_location(...)
+variable::get_all_coordinates(location: location, x: variable, y: variable, z: variable, yaw: variable, pitch: variable)
+var variable = variable::get_coordinate(location: location, type: X|Y|Z|YAW|PITCH)  // или location.get_coordinate(...)
+var variable = variable::get_location_direction(location: location)  // или location.get_location_direction(...)
+var variable = variable::location_relative(location: location, distance: number, block_face: NORTH|EAST|SOUTH|WEST|UP|DOWN|…(10))  // или location.location_relative(...)
+var variable = variable::distance(location_1: location, location_2: location, type: THREE_D|TWO_D|ALTITUDE|SQUARED_3D|SQUARED_2D)  // или location_1.distance(...); на сервере: locations_distance
+var variable = variable::random_location(location_1: location, location_2: location, integer: boolean=TRUE)
+var variable = variable::set_all_coordinates(x: number, y: number, z: number, yaw: number, pitch: number)
+var variable = variable::set_coordinate(location: location, coordinate: number, type: X|Y|Z|PITCH|YAW)  // или location.set_coordinate(...)
+var variable = variable::set_location_direction(location: location, vector: vector)  // или location.set_location_direction(...)
+var variable = variable::shift_all_coordinates(location: location, x: number, y: number, z: number, yaw: number, pitch: number)  // или location.shift_all_coordinates(...)
+var variable = variable::shift_coordinate(location: location, distance: number, type: X|Y|Z|PITCH|YAW)  // или location.shift_coordinate(...)
+var variable = variable::shift_location_in_direction(location: location, shift: number, direction: FORWARD|UPWARD|SIDEWAYS)  // или location.shift_location_in_direction(...)
+var variable = variable::shift_location_on_vector(location: location, vector: vector, length: number)  // или location.shift_location_on_vector(...)
+var variable = variable::shift_location_towards_location(location_from: location, location_to: location, distance: number)  // или location_from.shift_location_towards_location(...)
+var variable = variable::merge(map: variable, other_map: variable)  // или map.merge(...); на сервере: append_map
+var variable = variable::append_maps(maps: variable)  // или maps.append_maps(...)
+variable::clear(map: variable)  // или map.clear(...); на сервере: clear_map
+var variable = variable::create_map(keys: variable, values: variable)
+var variable = variable::create_map_from_values(keys: any[15], values: any[15])
+variable::get_map_entry_by_index(variable_key: variable, variable_value: variable, map: variable, index: number, default_key: any, default_value: any)
+var variable = variable::get_map_key_by_index(map: variable, index: number, default_value: any)  // или map.get_map_key_by_index(...)
+var variable = variable::keys(map: variable)  // или map.keys(...); на сервере: get_map_keys
+var variable = variable::get_map_keys_by_value(map: variable, value: any, find_mode: FIRST|LAST|ALL, default_value: any)  // или map.get_map_keys_by_value(...)
+variable::get_map_random_entry(variable_key: variable, variable_value: variable, map: variable)
+var variable = variable::length(map: variable)  // или map.length(...); словарь; также: size; на сервере: get_map_size
+var variable = variable::get_map_value(map: variable, key: any[15], default_value: any)  // или map.get_map_value(...)
+var variable = variable::get_map_value_by_index(map: variable, index: number, default_value: any)  // или map.get_map_value_by_index(...)
+var variable = variable::values(map: variable)  // или map.values(...); на сервере: get_map_values
+var variable = variable::get(map: variable, key: any, default_value: any)  // или map.get(...); словарь; на сервере: get_map_value_single
+variable::set(map: variable, key: any, value: any)  // или map.set(key, value), то же, что map[key] = value; словарь; на сервере: put_map_value
+var variable = variable::shuffle(map: variable)  // или map.shuffle(...); словарь; на сервере: randomize_map_order
+var variable = variable::remove_map_entry(map: variable, key: any, values: any[18], removed_value: variable)  // или map.remove(...); словарь
+var variable = variable::reverse(map: variable)  // или map.reverse(...); словарь; на сервере: reverse_map
+var variable = variable::set_map_value(map: variable, key: any[15], value: any[15])  // или map.set_map_value(...)
+var variable = variable::sort(map: variable, sort_order: ASCENDING|DESCENDING, sort_type: KEYS|VALUES)  // или map.sort(...); словарь; на сервере: sort_any_map
+var variable = variable::get_block_sound(block: item, source: BREAK|PLACE|HIT|FALL|STEP)  // или block.get_block_sound(...)
+var variable = variable::get_color_channels(color: text, color_channels: RGB|HSB|HSL)  // или color.get_color_channels(...)
+var variable = variable::get_entity_types_by_tag(namespace: text, result_type: ID|TRANSLATION_KEY)  // или namespace.get_entity_types_by_tag(...)
+var variable = variable::get_potion_effect_amplifier(potion: potion)  // или potion.get_potion_effect_amplifier(...)
+var variable = variable::get_potion_effect_duration(potion: potion)  // или potion.get_potion_effect_duration(...)
+var variable = variable::get_potion_effect_type(potion: potion)  // или potion.get_potion_effect_type(...)
+var variable = variable::get_sound_pitch(sound: sound)  // или sound.get_sound_pitch(...)
+var variable = variable::get_sound_source(sound: sound)  // или sound.get_sound_source(...)
+var variable = variable::get_sound_type(sound: sound)  // или sound.get_sound_type(...)
+var variable = variable::get_sound_variation(sound: sound)  // или sound.get_sound_variation(...)
+var variable = variable::get_sound_volume(sound: sound)  // или sound.get_sound_volume(...)
+var variable = variable::get_template_code(template: item, return_type: TEXT|MAP)  // или template.get_template_code(...)
+var variable = variable::set_potion_effect_amplifier(potion: potion, amplifier: number)  // или potion.set_potion_effect_amplifier(...)
+var variable = variable::set_potion_effect_duration(potion: potion, duration: number)  // или potion.set_potion_effect_duration(...)
+var variable = variable::set_potion_effect_type(potion: potion, effect_type: text)  // или potion.set_potion_effect_type(...)
+var variable = variable::set_sound_pitch(sound: sound, pitch: number)  // или sound.set_sound_pitch(...)
+var variable = variable::set_sound_source(sound: sound, source: AMBIENT|BLOCK|HOSTILE|MASTER|MUSIC|NEUTRAL|…(10))  // или sound.set_sound_source(...)
+var variable = variable::set_sound_type(sound: sound, namespace: text, value: text)  // или sound.set_sound_type(...)
+var variable = variable::set_sound_variation(sound: sound, variation: text)  // или sound.set_sound_variation(...)
+var variable = variable::set_sound_volume(sound: sound, volume: number)  // или sound.set_sound_volume(...)
+var variable = variable::set_template_code(template: item, code: any)  // или template.set_template_code(...)
+var variable = variable::hsb(hue: number, saturation: number, brightness: number)  // на сервере: to_hsb
+var variable = variable::hsl(hue: number, saturation: number, lightness: number)  // на сервере: to_hsl
+var variable = variable::rgb(red: number, green: number, blue: number)  // на сервере: to_rgb
+var variable = variable::abs(number: number)  // или number.abs(...); на сервере: absolute
+var variable = variable::add(value: number[21])  // или value.add(...)
+var variable = variable::atan2(y: number, x: number)  // или y.atan2(...)
+var variable = variable::average(value: number[21], type: ARITHMETIC|GEOMETRIC|HARMONIC|QUADRATIC)  // или value.average(...)
+var variable = variable::bitwise_operation(operand1: number, operand2: number, operator: OR|AND|NOT|XOR|LEFT_SHIFT|RIGHT_SHIFT|…(9))  // или operand1.bitwise_operation(...)
+var variable = variable::clamp(number: number, min: number, max: number)  // или number.clamp(...)
+var variable = variable::parse_int(text: text, radix: number)  // или text.parse_int(...); на сервере: convert_text_to_number
+var variable = variable::cosine(number: number, variant: COSINE|ARCCOSINE|HYPERBOLIC_COSINE|HYPERBOLIC_ARCCOSINE, input: DEGREES|RADIANS)  // или number.cosine(...)
+var variable = variable::cotangent(number: number, variant: COTANGENT|ARCCOTANGENT|HYPERBOLIC_COTANGENT|HYPERBOLIC_ARCCOTANGENT, input: DEGREES|RADIANS)  // или number.cotangent(...)
+variable::decrement(variable: variable, number: number)  // или variable.decrement(...)
+var variable = variable::divide(value: number[21], division_mode: DEFAULT|ROUND_TO_INT|FLOOR|CEIL)  // или value.divide(...)
+var variable = variable::find_nearest_number(number: number, numbers: number[21])  // или number.find_nearest_number(...)
+var variable = variable::gamma_function(number: number)  // или number.gamma_function(...)
+var variable = variable::gaussian_distribution(deviant: number, mean: number, distribution: NORMAL|FOLDER_NORMAL)  // или deviant.gaussian_distribution(...)
+variable::increment(variable: variable, number: number)  // или variable.increment(...)
+var variable = variable::lerp(start: number, stop: number, amount: number)  // или start.lerp(...); на сервере: lerp_number
+var variable = variable::log(number: number, base: number)  // или number.log(...)
+var variable = variable::map_range(number: number, from_start: number, from_stop: number, to_start: number, to_stop: number)  // или number.map_range(...)
+var variable = variable::mathematical_expectation(values: number[15], probabilities: number[15])
+var variable = variable::max(value: number[21])  // или value.max(...)
+var variable = variable::median(value: number[21])
+var variable = variable::min(value: number[21])  // или value.min(...)
+var variable = variable::multiply(value: number[21])  // или value.multiply(...)
+var variable = variable::perlin_noise_3d(location: location, seed: number, loc_frequency: number, octaves: number, frequency: number, amplitude: number, range_mode: ZERO_TO_ONE|FULL_RANGE, normalized: boolean=TRUE)  // или location.perlin_noise_3d(...)
+var variable = variable::pow(base: number, power: number)  // или base.pow(...)
+var variable = variable::random_in_range(min: number, max: number, integer: boolean=TRUE)
+var variable = variable::remainder(dividend: number, divisor: number, remainder_mode: REMAINDER|MODULO)  // или dividend.remainder(...)
+var variable = variable::root(base: number, root: number)  // или base.root(...)
+var variable = variable::round(number: number, precision: number, round_type: ROUND|FLOOR|CEIL)  // или number.round(...)
+var variable = variable::simplex_noise_3d(location: location, seed: number, loc_frequency: number, octaves: number, frequency: number, amplitude: number, range_mode: ZERO_TO_ONE|FULL_RANGE, normalized: boolean=TRUE)  // или location.simplex_noise_3d(...)
+var variable = variable::sine(number: number, variant: SINE|ARCSINE|HYPERBOLIC_SINE|HYPERBOLIC_ARCSINE, input: DEGREES|RADIANS)  // или number.sine(...)
+var variable = variable::subtract(value: number[21])  // или value.subtract(...)
+var variable = variable::tangent(number: number, variant: TANGENT|ARCTANGENT|HYPERBOLIC_TANGENT|HYPERBOLIC_ARCTANGENT, input: DEGREES|RADIANS)  // или number.tangent(...)
+var variable = variable::voronoi_noise_3d(location: location, seed: number, frequency: number, displacement: number, range_mode: ZERO_TO_ONE|FULL_RANGE, enable_distance: boolean=FALSE)  // или location.voronoi_noise_3d(...)
+var variable = variable::wrap(number: number, min: number, max: number)  // или number.wrap(...); на сервере: warp
+var variable = variable::get_particle_amount(particle: particle)  // или particle.get_particle_amount(...)
+var variable = variable::get_particle_color(particle: particle, color_type: COLOR|TO_COLOR)  // или particle.get_particle_color(...)
+var variable = variable::get_particle_material(particle: particle)  // или particle.get_particle_material(...)
+var variable = variable::get_particle_offset(particle: particle)  // или particle.get_particle_offset(...)
+var variable = variable::get_particle_size(particle: particle)  // или particle.get_particle_size(...)
+var variable = variable::get_particle_spread(particle: particle, type: VERTICAL|HORIZONTAL)  // или particle.get_particle_spread(...)
+var variable = variable::get_particle_type(particle: particle)  // или particle.get_particle_type(...)
+var variable = variable::set_particle_amount(particle: particle, amount: number)  // или particle.set_particle_amount(...)
+var variable = variable::set_particle_color(particle: particle, hex_color: text, color_type: COLOR|TO_COLOR)  // или particle.set_particle_color(...)
+var variable = variable::set_particle_material(particle: particle, material: item)  // или particle.set_particle_material(...)
+var variable = variable::set_particle_offset(particle: particle, offset: vector)  // или particle.set_particle_offset(...)
+var variable = variable::set_particle_size(particle: particle, size: number)  // или particle.set_particle_size(...)
+var variable = variable::set_particle_spread(particle: particle, horizontal: number, vertical: number)  // или particle.set_particle_spread(...)
+var variable = variable::set_particle_type(particle: particle, type: text)  // или particle.set_particle_type(...)
+var variable = variable::set_value(value: any)
+var variable = variable::get_list_variables(scope: GAME|SAVE|LOCAL|LINE, names: text[12], match: EQUALS, ignore_case: boolean=FALSE)
+variable::multiple(variables: variable[20], values: any[20])
+variable::purge(names: text[16], scope: GAME|SAVE|LOCAL|LINE, match: EQUALS|NAME_CONTAINS|PART_CONTAINS|STARTS_WITH|ENDS_WITH, ignore_case: boolean=FALSE)
+var variable = variable::set_random(values: any[21])  // или values.set_random(...)
+variable::remove(variables: variable[18])
+var variable = variable::bytes_to_text(bytes: variable, charset: UTF_16|UTF_8|ASCII)  // или bytes.bytes_to_text(...)
+var variable = variable::char_to_number(char: text)  // или char.char_to_number(...)
+var variable = variable::chunk(text: text, size: number)  // или text.chunk(...); текст; на сервере: chunk_text
+var variable = variable::clear_color_codes(text: text)  // или text.clear_color_codes(...)
+var variable = variable::code_bytes(input: variable, codec: BASE64_ENCODE|BASE64_DECODE|ZLIB_COMPRESS|ZLIB_DECOMPRESS)  // или input.code_bytes(...)
+var variable = variable::convert_number_to_text(number: number, radix: number)  // или number.convert_number_to_text(...)
+var variable = variable::format_timestamp(time: number, pattern: text, zone_id: text, locale: text, format: CUSTOM|DD_MM_YYYY_HH_MM_S|DD_MM_YYYY|YYYY_MM_DD_HH_MM_S|YYYY_MM_DD|EEE_D_MMMM|…(13))  // или time.format_timestamp(...)
+var variable = variable::get_char_at(text: text, index: number)  // или text.get_char_at(...)
+var variable = variable::index_of(text: text, subtext: text, start_index: number, search_mode: FIRST|LAST)  // или text.index_of(...); текст; на сервере: get_index_of_subtext
+var variable = variable::length(text: text)  // или text.length(...); текст; на сервере: get_text_length
+var variable = variable::get_text_regex_groups(text: text, regex: text, group: text, match_mode: ALL|FIRST, get_group_by: INDEX|NAME, ignore_case: boolean=FALSE, multiline: boolean=FALSE, literal: boolean=FALSE, unix_lines: boolean=FALSE, comments: boolean=FALSE, dot_matches_all: boolean=FALSE, cannon_eq: boolean=FALSE)  // или text.get_text_regex_groups(...)
+var variable = variable::get_text_similarity(text_1: text, text_2: text, value_type: SIMILARITY|LEVENSHTEIN_DISTANCE)  // или text_1.get_text_similarity(...)
+var variable = variable::get_text_width(text: text)  // или text.get_text_width(...)
+var variable = variable::get_text_hash(text: text, algorithm: MD5|SHA1|SHA256)  // или text.get_text_hash(...)
+var variable = variable::join(list: variable, separator: text, prefix: text, postfix: text, limit: number, truncated: text)  // или list.join(...); на сервере: join_text
+var variable = variable::parse_json(json: text)
+var variable = variable::regex_replace(text: text, regex: text, replacement: text, first: ANY|FIRST, ignore_case: boolean=FALSE, multiline: boolean=FALSE, literal: boolean=FALSE, unix_lines: boolean=FALSE, comments: boolean=FALSE, dot_matches_all: boolean=FALSE, cannon_eq: boolean=FALSE)  // или text.regex_replace(...); на сервере: regex_replace_text
+var variable = variable::remove_text(text: text, regex: boolean=FALSE, remove: text[18])  // или text.remove_text(...)
+var variable = variable::repeat(text: text, repeat: number)  // или text.repeat(...); на сервере: repeat_text
+var variable = variable::replace(text: text, replace: text, replacement: text, first: ANY|FIRST, ignore_case: boolean=FALSE)  // или text.replace(...); на сервере: replace_text
+var variable = variable::split(text: text, delimiter: text)  // или text.split(...); на сервере: split_text
+var variable = variable::word_wrap(text: text, max_length: number)  // или text.word_wrap(...); на сервере: split_text_by_length
+var variable = variable::strip(text: text, strip_type: ALL|START|END|INDENT)  // или text.strip(...); на сервере: strip_text
+var variable = variable::set_text(text: text[21], merging: SPACES|CONCATENATION|SEPARATE_LINES)  // или text.set_text(...)
+var variable = variable::set_text_case(text: text, case_type: UPPER|LOWER|PROPER|INVERT|RANDOM)  // или text.set_text_case(...)
+var variable = variable::text_to_bytes(text: text, charset: UTF_16|UTF_8|ASCII)  // или text.text_to_bytes(...)
+var variable = variable::text_to_chars(text: text, chars_type: CHARS|CODES|CODEPOINTS_CHARS|CODEPOINTS)  // или text.text_to_chars(...)
+var variable = variable::to_char(number: number)  // или number.to_char(...)
+var variable = variable::to_json(value: any, pretty_print: boolean=FALSE)  // или value.to_json(...)
+var variable = variable::slice(text: text, start: number, end: number)  // или text.slice(...); текст; на сервере: trim_text
+var variable = variable::add_vectors(vectors: vector[21])  // или vectors.add_vectors(...)
+var variable = variable::align_to_axis_vector(vector: vector, normalize: boolean=FALSE)  // или vector.align_to_axis_vector(...)
+var variable = variable::cross(vector_1: vector, vector_2: vector)  // или vector_1.cross(...); на сервере: vector_cross_product
+var variable = variable::divide_vector(vector: vector, divider: vector)  // или vector.divide_vector(...)
+var variable = variable::dot(vector_1: vector, vector_2: vector)  // или vector_1.dot(...); на сервере: vector_dot_product
+var variable = variable::get_angle_between_vectors(vector_1: vector, vector_2: vector, angle_units: DEGREES|RADIANS)  // или vector_1.get_angle_between_vectors(...)
+var variable = variable::get_midpoint_between_vectors(vector_1: vector, vector_2: vector)  // или vector_1.get_midpoint_between_vectors(...)
+variable::get_vector_all_components(vector: vector, x: variable, y: variable, z: variable)
+var variable = variable::get_vector_between_locations(start_location: location, end_location: location)  // или start_location.get_vector_between_locations(...)
+var variable = variable::get_vector_component(vector: vector, vector_component: X|Y|Z)  // или vector.get_vector_component(...)
+var variable = variable::get_vector_from_block_face(block_face: text)  // или block_face.get_vector_from_block_face(...)
+var variable = variable::length(vector: vector, length_type: LENGTH|LENGTH_SQUARED)  // или vector.length(...); вектор; на сервере: get_vector_length
+var variable = variable::hadamard_vector_product(vector_1: vector, vector_2: vector)  // или vector_1.hadamard_vector_product(...)
+var variable = variable::multiply_vector(vector: vector, multiplier: number)  // или vector.multiply_vector(...)
+var variable = variable::reflect(vector_1: vector, vector_2: vector, bounce: number)  // или vector_1.reflect(...); на сервере: reflect_vector_product
+var variable = variable::rotate_vector_around_axis(vector: vector, angle: number, axis: X|Y|Z, angle_units: DEGREES|RADIANS)  // или vector.rotate_vector_around_axis(...)
+var variable = variable::rotate_vector_around_vector(rotating_vector: vector, axis_vector: vector, angle: number, angle_units: DEGREES|RADIANS)  // или rotating_vector.rotate_vector_around_vector(...)
+var variable = variable::set_vector_component(vector: vector, value: number, vector_component: X|Y|Z)  // или vector.set_vector_component(...)
+var variable = variable::set_vector_length(vector: vector, length: number)  // или vector.set_vector_length(...)
+var variable = variable::subtract_vectors(vectors: vector[21])  // или vectors.subtract_vectors(...)
+var variable = variable::set_vector(x: number, y: number, z: number)
+var variable = variable::vector_to_direction_name(vector: vector)  // или vector.vector_to_direction_name(...)
+var variable = variable::get_all_block_data(location: location, hide_unspecified: boolean=TRUE)  // или location.get_all_block_data(...)
+var variable = variable::get_block_data(location: location, tag_name: text)  // или location.get_block_data(...)
+var variable = variable::get_block_growth(location: location, growth_unit: GROWTH_STAGE|GROWTH_PERCENTAGE)  // или location.get_block_growth(...)
+var variable = variable::get_block_material(location: location, value_type: ID|ID_WITH_DATA|NAME|ITEM)  // или location.get_block_material(...)
+var variable = variable::get_block_power(location: location)  // или location.get_block_power(...)
+var variable = variable::get_brushable_block_item(location: location)  // или location.get_brushable_block_item(...)
+var variable = variable::get_container_contents(location: location, ignore_empty_slots: boolean=TRUE)  // или location.get_container_contents(...)
+var variable = variable::get_container_lock(location: location)  // или location.get_container_lock(...)
+var variable = variable::get_container_name(location: location)  // или location.get_container_name(...)
+var variable = variable::get_custom_recipes(is_vanilla_recipes: boolean=FALSE)
+var variable = variable::get_decorated_pot_sherd(location: location, side: BACK|FRONT|LEFT|RIGHT)  // или location.get_decorated_pot_sherd(...)
+var variable = variable::get_lectern_book(location: location)  // или location.get_lectern_book(...)
+var variable = variable::get_lectern_page(location: location)  // или location.get_lectern_page(...)
+var variable = variable::get_light_level(location: location, value_type: TOTAL|SKY|BLOCKS)  // или location.get_light_level(...)
+var variable = variable::get_player_head_value(location: location, return_value: NAME|UUID|VALUE)  // или location.get_player_head_value(...)
+var variable = variable::get_sculk_shrieker_warning_level(location: location)  // или location.get_sculk_shrieker_warning_level(...)
+var variable = variable::get_sign_text(location: location, check_side: FRONT|BACK|ALL, sign_line: FIRST|SECOND|THIRD|FOURTH|ALL)  // или location.get_sign_text(...)
+var variable = variable::get_vault_displayed_item(location: location)  // или location.get_vault_displayed_item(...)
+var variable = variable::get_vault_next_state_update_time(location: location)  // или location.get_vault_next_state_update_time(...)
+var variable_for_hit_block_location = variable::ray_trace_result(start: location, ray_size: number, max_distance: number, ray_collision_mode: ONLY_BLOCKS|BLOCKS_AND_ENTITIES|ONLY_ENTITIES, ignore_passable_blocks: boolean=TRUE, fluid_collision_mode: NEVER|SOURCE_ONLY|ALWAYS, variable_for_hit_location: variable, variable_for_hit_block_face: variable, variable_for_hit_entity_uuid: variable, entities: variable, blocks: item[14])
+
+## code
+code::call_function(function_name: text, args: variable)
+code::break_label(label: text)
+code::throw_error(id: text, message: text, type: WARNING|ERROR|FATAL)  // на сервере: call_exception
+code::end_thread()  // на сервере: break
+code::return_function()
+code::skip_iteration()
+code::stop_repeat()
+code::wait(duration: number, time_unit: TICKS|SECONDS|MINUTES)
+code::controller_async_run()  [блок { }]
+code::do_not_run()  // на сервере: controller_do_not_run  [блок { }]
+code::catch_error(variable: variable)  // на сервере: controller_exception  [блок { }]
+code::isolated_selection(selection_mode: DEFAULT|CURRENT|EMPTY|FOR_EACH)  // на сервере: controller_isolated_selection  [блок { }]
+code::label(label: text)  // на сервере: controller_label  [блок { }]
+code::measure_time(variable: variable, duration: NANOSECONDS|MICROSECONDS|MILLISECONDS)  // на сервере: controller_measure_time  [блок { }]
+code::else()  [блок { }]
+code::request_transaction(amount: number, description: text, reason: text)  // на сервере: send_currency_transaction
+code::start_process(process_name: text, target_mode: CURRENT_TARGET|CURRENT_SELECTION|NO_TARGET|FOR_EACH_IN_SELECTION, local_variables_mode: DONT_COPY|COPY|SHARE, args: variable)
+
+## world
+world::set_block_growth(location: location, growth_stage: number, growth_type: STAGE_NUMBER|PERCENTAGE)  // на сервере: block_growth
+world::bloom_sculk_catalyst(location: location, bloom_location: location, charge: number)
+world::bone_meal_block(location: location, count: number)
+world::break_block(locations: location[16], tool: item, drop_exp: boolean=FALSE)
+var variable = world::chunk_get_custom_tag(location: location, tag_name: text, default_value: any)
+var variable = world::chunk_get_custom_tags(location: location)
+world::chunk_remove_custom_tag(location: location, tag_names: text[21])
+world::chunk_remove_custom_tags(location: location)
+world::chunk_set_custom_tag(location: location, tag_names: text[15], tag_values: text[15])
+world::clear_container(location: location)
+world::clear_container_items(location: location, items: item[35])
+world::clear_region(pos_1: location, pos_2: location)
+world::clone_region(pos_1: location, pos_2: location, target_pos: location, paste_pos: location, ignore_air: boolean=TRUE, copy_entity: boolean=TRUE)
+world::fill_container(location: location, items: item[14])
+world::generate_tree(location: location, tree_type: TREE|ACACIA|BIG_TREE|BIRCH|BROWN_MUSHROOM|CHORUS_PLANT|…(20))
+var variable = world::get_tile_block_custom_tags(location: location)
+world::random_tick_block(location: location, times: number(ticks))
+world::remove_container_items(location: location, items: item[35])
+world::remove_tile_block_custom_tag(location: location, tag_name: text[21])
+world::remove_tile_block_custom_tags(location: location)
+world::replace_blocks_in_region(old_block: item[10], pos_1: location, pos_2: location, new_block: item)
+world::replace_container_items(items: item[10], location: location, replace: item, count: number)
+world::set_age(location: location, tick: number(ticks))
+world::set_redstone_power(location: location, power_level: number)  // на сервере: set_block_analogue_power
+world::set_block(block: item, locations: location[14], update_blocks: boolean=FALSE)
+world::set_block_data(location: location, block_data: text)
+world::set_block_nbt(location: location, tag_names: text[15], tag_values: text[15])
+world::set_block_single_data(location: location, data: text, value: text)
+world::set_brushable_block_item(location: location, item: item)
+world::set_campfire_item(location: location, item: item, cooking_time: number, slot: FIRST|SECOND|THIRD|FOURTH)
+world::set_container_items(location: location[9], items: item[27])  // на сервере: set_container
+world::set_container_lock(location: location, container_key: text)
+world::set_container_name(location: location, name: text)
+world::set_copper_golem_statue_pose(location: location, pose: STANDING|SITTING|RUNNING|STAR)
+world::set_creaking_heart_natural(location: location, natural: boolean=TRUE)
+world::set_creaking_heart_state(location: location, heart_state: UPROOTED|DORMANT|AWAKE)
+world::set_decorated_pot_sherd(location: location, item: item, side: BACK|FRONT|LEFT|RIGHT)
+world::set_dried_ghast_hydration(location: location, hydration: number)
+world::set_furnace_cook_time(location: location, time: number)
+world::set_item_in_container_slot(location: location, item: item, slot: number)
+world::set_lectern_book(location: location, item: item, page: number)
+world::set_player_head(location: location, name_or_uuid: text, receive_type: NAME_OR_UUID|VALUE)
+world::set_potent_sulfur_state(location: location, state: DRY|WET|DORMANT|ERUPTING|CONTINUOUS)
+world::set_block_powered(location: location, powered: boolean=TRUE)
+world::set_region(block: item, pos_1: location, pos_2: location)
+world::set_sculk_shrieker_can_summon(location: location, can_summon: boolean=TRUE)
+world::set_sculk_shrieker_shrieking(location: location, shrieking: boolean=TRUE)
+world::set_sculk_shrieker_warning_level(location: location, warning_level: number)
+world::set_sign_text(location: location, text: text, line: number, side: FRONT|BACK|ALL)
+world::set_sign_text_color(location: location, side: FRONT|BACK|ALL, sign_text_color: BLACK|BLUE|BROWN|CYAN|GRAY|GREEN|…(16), glowing: boolean=TRUE)
+world::set_sign_waxed(location: location, waxed: boolean=TRUE)
+world::set_spawner_entity(location: location, entity: item)
+world::set_tile_block_custom_tag(location: location, tag_name: text[15], tag_value: text[15])
+world::set_vault_displayed_item(location: location, item: item)
+world::set_vault_next_state_update_time(location: location, time: number)
+world::update_block(location: location)
+world::wobble_decorated_pot(location: location, style: POSITIVE|NEGATIVE)
+world::create_explosion(location: location, power: number, name_or_uuid: text, fire: boolean=FALSE, break_blocks: boolean=FALSE)
+world::launch_firework(firework: item, location: location, movement: UPWARDS|DIRECTIONAL, instant: boolean=TRUE)
+world::launch_projectile(projectile: item, location: location, speed: number, inaccuracy: number, custom_name: text, trail: particle)
+world::spawn_armor_stand(helmet: item, chestplate: item, leggings: item, boots: item, right_hand: item, left_hand: item, gravity: boolean=FALSE, marker: boolean=FALSE, small: boolean=FALSE, show_arms: boolean=TRUE, base_plate: boolean=FALSE, invisible: boolean=FALSE, location: location, custom_name: text)
+world::spawn_block_display(spawn_location: location, custom_name: text, block: item)
+world::spawn_effect_cloud(location: location, effects: potion[6], radius: number, duration: number, particle: particle, custom_name: text)
+world::spawn_end_crystal(location: location, custom_name: text, show_bottom: boolean=TRUE)
+world::spawn_evoker_fangs(location: location, custom_name: text)
+world::spawn_experience_orb(location: location, experience_amount: number, custom_name: text)
+world::spawn_eye_of_ender(location: location, destination: location, lifespan: number, custom_name: text, end_of_lifespan: DROP|SHATTER|RANDOM)
+world::spawn_falling_block(block: item, location: location, name: text, should_expire: boolean=TRUE)
+world::spawn_interaction_entity(location: location, custom_name: text, width: number, height: number, responsive: boolean=TRUE)
+world::spawn_item(item: item, location: location, custom_name: text, apply_motion: boolean=TRUE, can_mob_pickup: boolean=TRUE, can_player_pickup: boolean=TRUE)
+world::spawn_item_display(spawn_location: location, custom_name: text, displayed_item: item)
+world::spawn_item_frame(spawn_location: location, item: item, rotation: NONE|CLOCKWISE_45|CLOCKWISE|CLOCKWISE_135|FLIPPED|FLIPPED_45|…(8), block_face: NORTH|EAST|SOUTH|WEST|UP|DOWN, glowing: boolean=FALSE, visible: boolean=TRUE, fixed: boolean=FALSE)
+world::spawn_lightning_bolt(location: location)
+world::spawn_entity(mob: item, location: location, health: number, custom_name: text, potion_effects: potion[15], main_hand: item, helmet: item, chestplate: item, leggings: item, boots: item, off_hand: item, natural_equipment: boolean=FALSE)  // на сервере: spawn_mob
+world::spawn_painting(spawn_location: location, art: text, block_face: NORTH|EAST|SOUTH|WEST)
+world::spawn_primed_tnt(location: location, tnt_power: number, fuse_duration: number, custom_name: text, block: item)
+world::spawn_shulker_bullet(location: location, custom_name: text)
+world::spawn_text_display(spawn_location: location, custom_name: text, merging_mode: SPACES|CONCATENATION|SEPARATE_LINES, displayed_text: text[28])
+world::spawn_vehicle(vehicle: item, location: location, custom_name: text)
+world::cancel_event()
+world::clear_exploded_blocks(location: location[27])
+world::hide_event_message(hide: boolean=TRUE)
+world::set_event_anvil_damage_state(damage_state: FULL|CHIPPED|DAMAGED|BROKEN)
+world::set_event_anvil_repair_cost(repair_cost: number, repair_cost_type: REPAIR_COST|REPAIR_ITEM_COUNT_COST|MAXIMUM_REPAIR_COST, bypass_cost: boolean=FALSE)
+world::set_event_combust_duration(duration: number)
+world::set_event_damage(damage: number)
+world::set_event_death_screen_message(message: text)
+world::set_event_enchantment_offers(enchantments: text[3], levels: number[3], costs: number[3])
+world::set_event_exhaustion(exhaustion: number)
+world::set_event_experience(experience: number)
+world::set_event_gamemode(gamemode: SURVIVAL|CREATIVE|ADVENTURE|SPECTATOR)
+world::set_event_heal(heal: number)
+world::set_event_item(item: item)
+world::set_event_item_cooldown(cooldown: number(ticks))
+world::set_event_items(items: item[36])
+world::set_event_knockback_vector(knockback: vector)
+world::set_event_move_allowed(allowed: boolean=TRUE)
+world::set_event_projectile(projectile: item, name: text)
+world::set_event_query_info(information: text)
+world::set_event_should_drop_leash(should_drop_leash: boolean=TRUE)
+world::set_event_should_play_effect(should_play_effect: boolean=TRUE)
+world::set_event_sound(sound: sound)
+world::set_event_source_slot(source_slot: number)
+world::set_event_target_slot(target: number)
+world::set_event_velocity(velocity: vector)
+world::uncancel_event()
+world::add_custom_cooking_recipe(name: text, replace_vanilla: boolean=FALSE, input: item, input_only_type: boolean=FALSE, result: item, experience: number, cooking_time: number(ticks), recipe_type: FURNACE|BLASTING|SMOKING|CAMPFIRE, category: FOOD|BLOCKS|MISC)
+world::add_custom_crafting_recipe(name: text, replace_vanilla: boolean=FALSE, items: item[9], input_only_types: boolean=FALSE, result: item, recipe_type: SHAPED|SHAPELESS, category: BUILDING|REDSTONE|EQUIPMENT|MISC)
+world::add_custom_smithing_transform_recipe(name: text, replace_vanilla: boolean=FALSE, template: item, template_only_type: boolean=FALSE, base: item, base_only_type: boolean=FALSE, addition: item, addition_only_type: boolean=FALSE, result: item, copy_data_components: boolean=TRUE)
+world::add_custom_smithing_trim_recipe(name: text, replace_vanilla: boolean=FALSE, template: item, template_only_type: boolean=FALSE, base: item, base_only_type: boolean=FALSE, addition: item, addition_only_type: boolean=FALSE, trim: item, copy_data_components: boolean=TRUE)
+world::add_custom_stonecutting_recipe(name: text, replace_vanilla: boolean=FALSE, input: item, input_only_type: boolean=FALSE, result: item)
+world::add_custom_transmute_recipe(name: text, replace_vanilla: boolean=FALSE, input: item, input_only_type: boolean=FALSE, material: item, material_only_type: boolean=FALSE, result: item, category: BUILDING|REDSTONE|EQUIPMENT|MISC)
+world::clear_custom_recipes()
+world::remove_custom_recipe(names: text[27], remove_vanilla: boolean=FALSE)
+world::clear_scoreboard_scores(id: text)
+world::create_scoreboard(id: text, display_name: text)
+world::remove_scoreboard(id: text)
+world::remove_scoreboard_score_by_name(id: text, text: text)
+world::remove_scoreboard_score_by_score(id: text, score: number)
+world::set_scoreboard_line(id: text, line: text, display: text, score: number, format_content: text, format: BLANK|FIXED|STYLED|RESET)
+world::set_scoreboard_line_display(id: text, line: text, display: text)
+world::set_scoreboard_line_format(id: text, line: text, format_content: text, format: BLANK|FIXED|STYLED|RESET)
+world::set_scoreboard_number_format(id: text, format_content: text, format: BLANK|FIXED|STYLED|RESET)
+world::set_scoreboard_score(id: text, text: text, score: number)
+world::set_scoreboard_title(id: text, title: text)
+world::set_block_drops_enabled(enable: boolean=TRUE)
+world::set_difficulty(difficulty: EASY|HARD|NORMAL|PEACEFUL)  // на сервере: set_world_difficulty
+world::set_hardcore(hardcore: boolean=TRUE)
+world::set_simulation_distance(distance: number)  // на сервере: set_world_simulation_distance
+world::set_time(time: number(ticks))  // на сервере: set_world_time
+world::set_weather(weather_type: CLEAR|RAINING|THUNDER, weather_duration: number)  // на сервере: set_world_weather
+world::set_gamerule(gamerule: DISABLE_RAIDS|DO_DAYLIGHT_CYCLE|DO_ENTITY_DROPS|DO_FIRE_TICK|DO_IMMEDIATE_RESPAWN|DO_INSOMNIA|…(47), value: text)  // на сервере: set_world_gamerule
+world::send_web_request(url: text, content_body: text, request_type: GET|POST|PUT|DELETE|HEAD|PATCH, content_type: TEXT_PLAIN|APPLICATION_JSON, headers: variable)
+world::block_equals(location: location, blocks: item[26])  [условие: if (...) { }]
+world::block_powered(locations: location[18], power_mode: DIRECT|INDIRECT)  [условие: if (...) { }]
+world::chunk_has_custom_tag(location: location, tag: text, tag_value: text[21], compare_type: EQUALS|CONTAINS|STARTS_WITH|ENDS_WITH)  [условие: if (...) { }]
+world::chunk_is_loaded(location: location)  [условие: if (...) { }]
+world::container_has(location: location, items: item[16], check_mode: ANY|ALL, comparison_mode: EXACTLY|IGNORE_STACK_SIZE|IGNORE_DURABILITY_AND_STACK_SIZE|TYPE_ONLY)  [условие: if (...) { }]
+world::container_has_room_for_item(location: location, items: item[16], check_mode: ANY|ALL)  [условие: if (...) { }]
+world::damage_cause_equals(cause: BLOCK_EXPLOSION|CONTACT|CRAMMING|CUSTOM|DRAGON_BREATH|DROWNING|…(29))  [условие: if (...) { }]
+world::event_attack_is_critical()  [условие: if (...) { }]
+world::event_block_equals(blocks: item[20], locations: location[20])  [условие: if (...) { }]
+world::event_has_input(input_type: FORWARD|BACKWARDS|LEFT|RIGHT|JUMP|SNEAK|…(7))  [условие: if (...) { }]
+world::event_is_age_locked()  [условие: if (...) { }]
+world::event_is_canceled()  [условие: if (...) { }]
+world::event_item_equals(items: item[18], comparison_mode: EXACTLY|IGNORE_STACK_SIZE|IGNORE_DURABILITY_AND_STACK_SIZE|TYPE_ONLY)  [условие: if (...) { }]
+world::has_entity(names_or_uuids: text[18], check_mode: ANY|ALL)  [условие: if (...) { }]
+world::has_player(names_or_uuids: text[18], check_mode: ANY|ALL)  [условие: if (...) { }]
+world::heal_cause_equals(heal_cause: CUSTOM|EATING|ENDER_CRYSTAL|MAGIC|MAGIC_REGEN|REGEN|…(9))  [условие: if (...) { }]
+world::ignite_cause_equals(cause: ARROW|ENDER_CRYSTAL|EXPLOSION|FIREBALL|FLINT_AND_STEEL|LAVA|…(8))  [условие: if (...) { }]
+world::instrument_equals(instrument: BANJO|BASS_DRUM|BASS_GUITAR|BELL|BIT|CHIME|…(16))  [условие: if (...) { }]
+world::location_in_block(location: location)  [условие: if (...) { }]
+world::sign_contains(location: location, texts: text[16], check_side: ANY|FRONT|BACK, check_mode: CONTAINS|EQUALS, lines: FIRST|SECOND|THIRD|FOURTH|ALL)  [условие: if (...) { }]
+world::tile_block_has_custom_tag(location: location, tag: text, tag_value: text[21], compare_type: EQUALS|CONTAINS|STARTS_WITH|ENDS_WITH)  [условие: if (...) { }]
+
+## entity
+entity::disguise_as_block(block: item)
+entity::disguise_as_entity(entity_type: item)
+entity::disguise_as_item(item: item)
+entity::disguise_as_player(name_or_uuid: text, display_name: text, server_type: MOJANG|SERVER|SERVER_DEFAULT)
+entity::mimic_disguise_from_entity(name_or_uuid: text, include_disguise: boolean=TRUE, remove_original_entity: boolean=FALSE)
+entity::play_damage_animation(damage_type: DAMAGE|CRITICAL_DAMAGE|MAGICAL_DAMAGE)
+entity::play_hurt_animation(yaw: number)
+entity::remove_disguise()
+entity::reset_mannequin_description()
+entity::set_armor_stand_parts(arms: ENABLE|DISABLE|DONT_CHANGE, base_plate: ENABLE|DISABLE|DONT_CHANGE)
+entity::set_armor_stand_pose(x_rotation: number, y_rotation: number, z_rotation: number, body_part: HEAD|BODY|LEFT_ARM|RIGHT_ARM|LEFT_LEG|RIGHT_LEG)
+entity::set_axolotl_type(axolotl_type: BLUE|CYAN|GOLD|LUCY|WILD)
+entity::set_bee_nectar(nectar: boolean=TRUE)
+entity::set_cat_lying_down(lying_down: boolean=TRUE)
+entity::set_cat_type(cat_type: ALL_BLACK|BLACK|BRITISH_SHORTHAIR|CALICO|JELLIE|PERSIAN|…(11))
+entity::set_chicken_type(variant: COLD|WARM|TEMPERATE)
+entity::set_cow_type(variant: COLD|WARM|TEMPERATE)
+entity::set_dye_color(color: BLACK|BLUE|BROWN|CYAN|GRAY|GREEN|…(16))
+entity::set_enderman_block(block: item)
+entity::set_fox_leaping(leaping: boolean=TRUE)
+entity::set_fox_type(fox_type: RED|SNOW)
+entity::set_frog_type(frog_variant: COLD|TEMPERATE|WARM)
+entity::set_glowing(glowing: boolean=TRUE)
+entity::set_glow_squid_dark(dark_ticks: number(ticks))
+entity::set_horse_pattern(horse_color: WHITE|CREAMY|CHESTNUT|BROWN|DARK_BROWN|GRAY|…(8), horse_style: NONE|WHITE|WHITEFIELD|WHITE_DOTS|BLACK_DOTS|DO_NOT_CHANGE)
+entity::set_item_in_frame(item: item, play_sound: boolean=FALSE)
+entity::set_llama_type(type: BROWN|CREAMY|GRAY|WHITE)
+entity::set_mannequin_description(description: text)
+entity::set_mannequin_main_hand(hand: RIGHT|LEFT)
+entity::set_mannequin_skin(name_or_uuid: text, server_type: MOJANG|SERVER|SERVER_DEFAULT)
+entity::set_mannequin_skin_model(model: CLASSIC|SLIM|UNSET)
+entity::set_mannequin_skin_parts(hat: TRUE|FALSE|NOT_SET, jacket: TRUE|FALSE|NOT_SET, left_sleeve: TRUE|FALSE|NOT_SET, right_sleeve: TRUE|FALSE|NOT_SET, left_pants: TRUE|FALSE|NOT_SET, right_pants: TRUE|FALSE|NOT_SET, cape: TRUE|FALSE|NOT_SET)
+entity::set_mannequin_skin_patch(texture_key: text, patch_target: BODY|CAPE|ELYTRA)
+entity::set_minecart_block(block: item, block_offset: number)
+entity::set_mob_aggressive(aggressive: boolean=TRUE)
+entity::set_mushroom_cow_type(cow_type: BROWN|RED)
+entity::set_parrot_type(parrot_type: BLUE|CYAN|GRAY|GREEN|RED)
+entity::set_pig_type(variant: COLD|WARM|TEMPERATE)
+entity::set_pose(pose: CROAKING|DIGGING|DYING|EMERGING|FALL_FLYING|LONG_JUMPING|…(14))
+entity::set_primed_tnt_block(block: item)
+entity::set_projectile_display_item(item: item)
+entity::set_rabbit_type(rabbit_type: BLACK|BLACK_AND_WHITE|BROWN|GOLD|SALT_AND_PEPPER|THE_KILLER_BUNNY|…(7))
+entity::set_shulker_peek(rolling: number, silent: boolean=TRUE)
+entity::set_snowman_pumpkin(pumpkin: boolean=TRUE)
+entity::set_tropical_fish_pattern(pattern_color: WHITE|ORANGE|MAGENTA|LIGHT_BLUE|YELLOW|LIME|…(17), body_color: WHITE|ORANGE|MAGENTA|LIGHT_BLUE|YELLOW|LIME|…(17), pattern: KOB|SUNSTREAK|SNOOPER|DASHER|BRINELY|SPOTTY|…(13))
+entity::set_villager_biome(biome: DESERT|JUNGLE|PLAINS|SAVANNA|SNOW|SWAMP|…(7))
+entity::set_visual_fire(visual_fire: TRUE|FALSE|NOT_SET)
+entity::set_wolf_type(wolf_type: ASHEN|SNOWY|RUSTY|BLACK|CHESTNUT|SPOTTED|…(9))
+entity::set_zombie_arms_raised(arms_raised: boolean=TRUE)
+entity::set_zombie_nautilus_variant(variant: TEMPERATE|WARM)
+entity::swing_hand(hand_type: MAIN|OFF)
+entity::reset_display_brightness()
+entity::reset_display_glow_color()
+entity::reset_text_display_background()
+entity::set_block_display_block(displayed_block: item)
+entity::set_display_billboard(billboard_type: CENTER|FIXED|HORIZONTAL|VERTICAL)
+entity::set_display_brightness(block_light_level: number, sky_light_level: number)
+entity::set_display_correct_transformation_matrix(matrix: number[16])
+entity::set_display_culling_size(width: number, height: number)
+entity::set_display_glow_color(color_hexadecimal: text)
+entity::set_display_interpolation(interpolation_duration: number, interpolation_delay: number)
+entity::set_display_rotation_from_axis_angle(axis_vector: vector, angle: number, mode: SET|ADD|ADD_LOCAL, rotation: LEFT_ROTATION|RIGHT_ROTATION, input: DEGREES|RADIANS)
+entity::set_display_rotation_from_euler_angles(pitch: number, yaw: number, roll: number, mode: SET|ADD|ADD_LOCAL, rotation: LEFT_ROTATION|RIGHT_ROTATION, input: DEGREES|RADIANS)
+entity::set_display_rotation_from_vector(direction: vector, up: vector, rotation: LEFT_ROTATION|RIGHT_ROTATION)
+entity::set_display_scale(scale_vector: vector, mode: SET|ADD)
+entity::set_display_shadow(shadow_radius: number, shadow_opacity_percentage: number)
+entity::set_display_teleport_duration(duration: number)
+entity::set_display_transformation_matrix(row_major_matrix: number[16])
+entity::set_display_translation(translation_vector: vector, mode: SET|ADD)
+entity::set_display_view_range(view_range: number)
+entity::set_item_display_item(displayed_item: item)
+entity::set_item_display_model_type(display_model_type: FIRSTPERSON_LEFTHAND|FIRSTPERSON_RIGHTHAND|FIXED|GROUND|GUI|HEAD|…(9))
+entity::set_text_display_alignment(text_alignment: CENTER|LEFT|RIGHT)
+entity::set_text_display_background(color_hexadecimal: text, opacity: number)
+entity::set_text_display_line_width(line_width: number)
+entity::set_text_display_opacity(text_opacity: number)
+entity::set_text_display_see_through(enable_see_through: boolean=TRUE)
+entity::set_text_display_text(displayed_text: text[27], merging_mode: SPACES|CONCATENATION|SEPARATE_LINES)
+entity::set_text_display_text_shadow(enable_text_shadow: boolean=TRUE)
+entity::finish_using_item()  // на сервере: complete_using_active_item
+entity::eat_grass()
+entity::eat_target(name_or_uuid: text)
+entity::explode()
+entity::ignite_creeper()
+entity::jump()
+entity::move_to_location(location: location, speed: number)
+entity::move_to_location_stop()
+entity::ram_target(name_or_uuid: text)
+entity::retrieve_fishing_hook(slot: MAIN_HAND|OFF_HAND)
+entity::roll_armadillo(roll: ROLL_OUT|ROLL_UP)
+entity::set_allay_dancing(dance: boolean=TRUE)
+entity::set_aware(aware: boolean=TRUE)
+entity::set_celebrating(celebrating: boolean=TRUE)
+entity::set_dragon_phase(phase: BREATH_ATTACK|CHARGE_PLAYER|CIRCLING|DYING|FLY_TO_PORTAL|HOVER|…(11))
+entity::set_panda_rolling(rolling: boolean=TRUE)
+entity::set_pathfinder_settings(can_float: TRUE|FALSE|NOT_SET, can_open_door: TRUE|FALSE|NOT_SET, can_pass_door: TRUE|FALSE|NOT_SET)
+entity::set_piglin_able_to_hunt(able: boolean=TRUE)
+entity::set_piglin_charging_crossbow(charging: boolean=TRUE)
+entity::set_piglin_dancing(dancing_time: number(ticks))
+entity::set_shulker_bullet_target(target: text)
+entity::set_target(name_or_uuid: text)
+entity::set_vex_charging(charging: boolean=TRUE)
+entity::sleep(sleep: boolean=TRUE)
+entity::use_item(hand: MAIN_HAND|OFF_HAND, enable: boolean=TRUE)
+var variable = entity::get_custom_tag(name: text, default: any)
+var variable = entity::get_custom_tags()
+var variable = entity::get_equipment(slot: CHEST|FEET|HAND|HEAD|LEGS|OFF_HAND)  // на сервере: get_equipment_item
+var variable = entity::get_nbt(path: text[21], value_type: ANY_VALUE|NBT_STRING)
+entity::launch_projectile(projectile: item, location: location, name: text, speed: number, inaccuracy: number, trail: particle)
+entity::remove()
+entity::remove_custom_tag(name: text[45])
+entity::remove_custom_tags()
+entity::set_armor(helmet: item, chestplate: item, leggings: item, boots: item, silent: boolean=FALSE)  // на сервере: set_armor_items
+entity::set_arrow_hit_sound(sound: sound)
+entity::set_custom_tag(name: text[20], value: text[20])
+entity::set_equipment(item: item, slot: CHEST|FEET|HAND|HEAD|LEGS|OFF_HAND)  // на сервере: set_equipment_item
+entity::set_falling_block_type(block: item)
+entity::set_item(item: item)
+entity::set_item_frame_item_drop_chance(drop_chance: number)
+entity::set_painting_art(art: text, force: boolean=TRUE)
+entity::set_warden_digging(digging: EMERGE|DIG_DOWN)
+entity::shear()
+entity::shear_sheep()
+entity::attach_lead(name_or_uuid: text, location: location)
+entity::face_location(location: location)
+entity::launch_forward(power: number, increment: boolean=TRUE, launch_axis: YAW_AND_PITCH|YAW)
+entity::launch_to_location(location: location, power: number, increment: boolean=TRUE)
+entity::launch_up(power: number, increment: boolean=TRUE)
+entity::leave_vehicle()
+entity::ride_entity(name_or_uuid: text)
+entity::set_friction(friction: TRUE|FALSE|NOT_SET)
+entity::set_gliding(is_gliding: boolean=TRUE)
+entity::set_gravity(gravity: boolean=TRUE)
+entity::set_rotation(yaw: number, pitch: number)
+entity::set_rotation_by_vector(vector: vector)
+entity::set_velocity(velocity: vector, increment: boolean=TRUE)
+entity::teleport(location: location, keep_rotation: boolean=TRUE)
+entity::clear_potion_effects()
+entity::damage(damage: number, source: text)
+var variable = entity::get_attribute(attribute_type: GENERIC_MAX_HEALTH|GENERIC_MAX_ABSORPTION|GENERIC_FOLLOW_RANGE|GENERIC_KNOCKBACK_RESISTANCE|GENERIC_MOVEMENT_SPEED|GENERIC_FLYING_SPEED|…(40), return_value: VALUE|BASE_VALUE|DEFAULT_VALUE)
+entity::give_potion_effect(potions: potion[14], overwrite: boolean=TRUE, show_icon: boolean=TRUE, particle_mode: REGULAR|AMBIENT|NONE)  // также: add_potion_effect; на сервере: give_potion_effects
+entity::heal(heal: number)
+entity::remove_potion_effect(effects: potion[18])
+entity::set_absorption_health(health: number)
+entity::set_animal_age(age: number, lock: ENABLE|DISABLE|DONT_CHANGE)
+entity::set_arrow_pierce(pierce: number)
+entity::set_attribute(value: number, attribute_type: GENERIC_MAX_HEALTH|GENERIC_MAX_ABSORPTION|GENERIC_FOLLOW_RANGE|GENERIC_KNOCKBACK_RESISTANCE|GENERIC_MOVEMENT_SPEED|GENERIC_FLYING_SPEED|…(40))
+entity::set_base_arrow_damage(damage: number)
+entity::set_creeper_fuse(fuse_ticks: number(ticks))
+entity::set_health(health: number)  // на сервере: set_current_health
+entity::set_death_time(death_time: number(ticks))
+entity::set_explosive_power(power: number)
+entity::set_fall_distance(fall_distance: number)
+entity::set_fire_ticks(ticks: number(ticks))
+entity::set_fishing_wait(time: number, wait_type: MIN_MAX_WAIT|WAIT|MIN_WAIT|MAX_WAIT)
+entity::set_freeze_ticks(ticks: number(ticks), ticking_locked: boolean=TRUE)
+entity::set_fuse_ticks(fuse_ticks: number(ticks))
+entity::set_horse_jump(power: number)
+entity::set_invulnerability_ticks(ticks: number(ticks))
+entity::set_max_health(max_health: number, heal_to_max: boolean=TRUE)
+entity::set_max_invulnerability_ticks(ticks: number(ticks))
+entity::set_panda_sad_ticks(sad_ticks: number)
+entity::set_pickup_delay(delay: number)
+entity::set_potion_cloud_radius(radius: number, shrinking_speed: number)
+entity::set_projectile_power(power: vector)
+entity::set_vex_limited_lifetime_ticks(lifetime: number)
+entity::set_villager_experience(experience: number)
+entity::set_warden_anger_level(name_or_uuid: text, anger: number)
+entity::set_wither_invulnerability_ticks(ticks: number(ticks))
+entity::clear_merchant_recipes()
+entity::modify_piglin_barter_materials(materials: item[18], modification_mode: ADD|REMOVE)
+entity::modify_piglin_interested_materials(materials: item[18], modification_mode: ADD|REMOVE)
+entity::remove_merchant_recipe(recipe_index: number)
+entity::reset_waypoint_color()
+entity::set_age_lock(age_lock: boolean=TRUE)
+entity::set_ai(ai: boolean=TRUE)
+entity::set_angry(angry: boolean=TRUE, target: text)
+entity::set_baby(baby: boolean=TRUE)
+entity::set_bee_has_stinger(stinger: boolean=TRUE)
+entity::set_camel_dashing(dashing: boolean=TRUE)
+entity::set_carrying_chest(carrying: boolean=TRUE)
+entity::set_collidable(collidable: boolean=TRUE)
+entity::set_copper_golem_oxidizing(oxidizing_state: WAXED|UNSET)
+entity::set_copper_golem_oxidizing_at_time(time: number(ticks))
+entity::set_copper_golem_weathering(weathering_state: UNAFFECTED|EXPOSED|WEATHERED|OXIDIZED)
+entity::set_creeper_charge(charged: boolean=TRUE)
+entity::set_custom_name(custom_name: text)
+entity::set_custom_name_visibility(visibility: boolean=TRUE)
+entity::set_death_drops(drops: boolean=TRUE)
+entity::set_default_visible(default_visible: boolean=FALSE)
+entity::set_despawning(despawning: boolean=TRUE)
+entity::set_end_crystal_beam(beam: location)
+entity::set_goat_screaming(screams: boolean=TRUE)
+entity::set_hanging_facing_location(facing: NORTH|EAST|SOUTH|WEST|UP|DOWN, force: boolean=TRUE)
+entity::set_immune_to_zombification(is_immune: boolean=TRUE)
+entity::set_interaction_responsive(responsive: boolean=TRUE)
+entity::set_interaction_size(width: number, height: number)
+entity::set_invisible(invisible: boolean=TRUE)
+entity::set_invulnerable(invulnerable: boolean=TRUE)
+entity::set_item_owner(name_or_uuid: text)
+entity::set_mannequin_immovable(immovable: boolean=TRUE)
+entity::set_marker(marker: boolean=TRUE)
+entity::set_merchant_recipe(result: item, ingredient_one: item, ingredient_two: item, index: number, mode: MERGE|APPEND, uses: number, max_uses: number, villager_experience: number, price_multiplifier: number, demand: number, special_price: number, ignore_discounts: boolean=TRUE, experience_reward: boolean=TRUE)
+entity::set_no_physics(no_physics: boolean=TRUE)
+entity::set_panda_gene(gene: MAIN|HIDDEN|BOTH, gene_type: NORMAL|LAZY|WORRIED|PLAYFUL|BROWN|WEAK|…(7))
+entity::set_panda_on_back(on_back: boolean=TRUE)
+entity::set_persistence(persistence: boolean=TRUE)
+entity::set_persistent(persistent: boolean=TRUE)
+entity::set_pickup(can_mob_pickup: boolean=TRUE, can_player_pickup: boolean=TRUE)
+entity::set_projectile_shooter(uuid: text)
+entity::set_rearing(rearing: boolean=TRUE)
+entity::set_riptiding(riptiding: boolean=TRUE)
+entity::set_sheep_sheared(sheared: boolean=TRUE)
+entity::set_silenced(silenced: boolean=TRUE)
+entity::set_sitting(sitting: boolean=TRUE)
+entity::set_size(size: number)
+entity::set_sniffer_state(state: DIGGING|FEELING_HAPPY|IDLING|RISING|SCENTING|SEARCHING|…(7))
+entity::set_tame(name_or_uuid: text)
+entity::set_villager_profession(profession: NONE|ARMORER|BUTCHER|CARTOGRAPHER|CLERIC|FARMER|…(15))
+entity::set_waypoint_color(red: number, green: number, blue: number)
+entity::set_waypoint_style(style: text)
+entity::set_wearing_saddle(wearing: boolean=TRUE)
+entity::set_wolf_sound_variant(sound_variant: ANGRY|BIG|CLASSIC|CUTE|GRUMPY|PUGLIN|…(7))
+entity::collides_at_location(location: location)  [условие: if (...) { }]
+entity::collides_using_hitbox(min: location, max: location)  [условие: if (...) { }]
+entity::collides_with_entity(name_or_uuid: text, check_type: OVERLAPS|CONTAINS)  [условие: if (...) { }]
+entity::exists()  [условие: if (...) { }]
+entity::has_available_path()  [условие: if (...) { }]
+entity::has_custom_tag(tag: text, tag_value: text[21], compare_type: EQUALS|CONTAINS|STARTS_WITH|ENDS_WITH)  [условие: if (...) { }]
+entity::has_potion_effect(potions: potion[18], check_mode: ANY|ALL)  [условие: if (...) { }]
+entity::is_disguised()  [условие: if (...) { }]
+entity::is_on_ground()  // на сервере: is_grounded  [условие: if (...) { }]
+entity::in_area(location_1: location, location_2: location, ignore_y_axis: boolean=TRUE, intersect_type: POINT|HITBOX, check_type: OVERLAPS|CONTAINS)  [условие: if (...) { }]
+entity::is_item()  [условие: if (...) { }]
+entity::is_minecraft_tagged(namespace: text)  [условие: if (...) { }]
+entity::is_mob()  [условие: if (...) { }]
+entity::is_near(ignore_y_axis: boolean=TRUE, location: location, range: number)  // на сервере: is_near_location  [условие: if (...) { }]
+entity::is_projectile()  [условие: if (...) { }]
+entity::is_riding_entity(entity_ids: text[18], compare_mode: TYPE|NAME_OR_UUID)  [условие: if (...) { }]
+entity::is_standing_on_block(blocks: item[20], locations: location[20], only_solid: boolean=FALSE)  [условие: if (...) { }]
+entity::is_type(entity_types: item[18])  [условие: if (...) { }]
+entity::is_undead()  [условие: if (...) { }]
+entity::is_vehicle()  [условие: if (...) { }]
+entity::name_equals(names_or_uuids: text[18])  [условие: if (...) { }]
+entity::spawn_reason_equals(reason: BEEHIVE|BREEDING|BUILD_IRONGOLEM|BUILD_SNOWMAN|BUILD_WITHER|COMMAND|…(35))  [условие: if (...) { }]
+
+## select
+select::add_all_entities()
+select::add_all_mobs()
+select::add_all_players()
+select::add_entity_by_condition(<условие: a.less(10) или player::is_sneaking()>)  // на сервере: add_entity_by_conditional
+select::add_entity_by_name(name_or_uuid: text[18])
+select::add_event_target(selection_type: DEFAULT|KILLER|DAMAGER|VICTIM|SHOOTER|PROJECTILE)
+select::add_last_entity()
+select::add_last_mob()
+select::add_mob_by_name(name_or_uuid: text[18])
+select::add_player_by_condition(<условие: a.less(10) или player::is_sneaking()>)  // на сервере: add_player_by_conditional
+select::add_player_by_name(name_or_uuid: text[18])
+select::add_random_entity()
+select::add_random_mob()
+select::add_random_player()
+select::all_entities()
+select::all_mobs()
+select::all_players()
+select::entity_by_condition(<условие: a.less(10) или player::is_sneaking()>)  // на сервере: entity_by_conditional
+select::entity_by_name(name_or_uuid: text[18])
+select::event_target(selection_type: DEFAULT|KILLER|DAMAGER|VICTIM|SHOOTER|PROJECTILE)
+select::invert()
+select::last_entity()
+select::last_mob()
+select::mob_by_name(name_or_uuid: text[18])
+select::player_by_condition(<условие: a.less(10) или player::is_sneaking()>)  // на сервере: player_by_conditional
+select::player_by_name(name_or_uuid: text[18])
+select::random_entity()
+select::random_mob()
+select::random_player()
+select::reset()
+select::filter_by_condition(<условие: a.less(10) или player::is_sneaking()>)  // на сервере: filter_by_conditional
+select::filter_by_distance(location: location, selection_size: number, ignore_y_axis: boolean=TRUE, compare_mode: NEAREST|FARTHEST)
+select::filter_by_raycast(variable: variable, origin: location, max_distance: number, ray_size: number, selection_size: number, consider_blocks: boolean=TRUE, ignore_passable_blocks: boolean=TRUE, fluid_collision_mode: NEVER|SOURCE_ONLY|ALWAYS)
+select::filter_randomly(size: number)
+
+## repeat
+repeat::adjacently(origin: location, change_rotation: boolean=TRUE, include_self: boolean=TRUE, pattern: CARDINAL|SQUARE|ADJACENT|CUBE) { variable -> ... }  [цикл]
+repeat::for_each_in_list(list: variable) { index_variable, value_variable -> ... }  [цикл]
+repeat::for_each_in_map(map: variable) { key_variable, value_variable -> ... }  // на сервере: for_each_map_entry  [цикл]
+repeat::forever()  [цикл]
+repeat::times(amount: number) { variable -> ... }  // на сервере: multi_times  [цикл]
+repeat::on_circle(center: location, radius: number, circle_points: number, perpendicular_to_plane: vector, start_angle: number, angle_unit: DEGREES|RADIANS) { variable -> ... }  [цикл]
+repeat::on_grid(start: location, end: location) { variable -> ... }  [цикл]
+repeat::on_path(step: number, locations: location[21], rotation: boolean=TRUE) { variable -> ... }  [цикл]
+repeat::on_range(start: number, end: number, interval: number) { variable -> ... }  [цикл]
+repeat::on_sphere(center: location, radius: number, points: number, rotate_location: NO_CHANGES|INWARDS|OUTWARDS) { variable -> ... }  [цикл]
+repeat::while(<условие: a.less(10) или player::is_sneaking()>)  [цикл]
+
+## std
+var variable = std::mmss(time: number)
+var variable = std::hmmss(time: number)
+var variable = std::time(time: number, pattern: text)
+
+## value (игровые значения: value::name или value::name<selector>)
+value::health: number
+value::max_health: number
+value::absorption_health: number
+value::food: number
+value::saturation: number
+value::food_exhaustion: number
+value::saturated_regen_rate: number
+value::unsaturated_regen_rate: number
+value::starvation_rate: number
+value::attack_damage: number
+value::attack_speed: number
+value::attack_cooldown_ticks: number
+value::attack_cooldown_strength: number
+value::armor: number
+value::armor_toughness: number
+value::invulnerability_ticks: number
+value::max_invulnerability_ticks: number
+value::experience_level: number
+value::experience_progress: number
+value::death_screen_score: number
+value::fire_ticks: number
+value::freeze_ticks: number
+value::remaining_air: number
+value::fall_distance: number
+value::slot: number
+value::walking_speed: number
+value::flying_speed: number
+value::ping: number
+value::protocol: number
+value::client_view_distance: number
+value::item_usage_progress: number
+value::active_item_used_time: number
+value::entity_ticks_lived: number
+value::arrows_in_body: number
+value::age: number
+value::steer_forward: number
+value::steer_sideways: number
+value::merchant_recipe_count: number
+value::open_inventory_size: number
+value::entity_width_x: number
+value::entity_height: number
+value::entity_width_z: number
+value::entity_fuse_ticks: number
+value::projectile_power: vector
+value::enchantment_seed: number
+value::idle_duration: number
+value::entity_pathfinder_point_index: number
+value::location: location
+value::target_block: location
+value::target_fluid: location
+value::target_block_face: text
+value::eye_location: location
+value::cape_location: location
+value::x_coord: number
+value::y_coord: number
+value::z_coord: number
+value::pitch: number
+value::yaw: number
+value::direction_of_view: vector
+value::cardinal_direction: text
+value::hitbox_midpoint_location: location
+value::spawn_location: location
+value::origin: location
+value::velocity: vector
+value::body_yaw: number
+value::block_beneath: location
+value::blocks_beneath: location[27]
+value::last_death_location: location
+value::main_hand_item: item
+value::off_hand_item: item
+value::armor_items: item[4]
+value::hotbar: item[9]
+value::inventory: item[36]
+value::open_inventory: item[36]
+value::cursor_item: item
+value::saddle_item: item
+value::entity_item: item
+value::entity_pick_item_stack: item
+value::player_enderchest_items: item[27]
+value::name: text
+value::uuid: text
+value::display_name: text
+value::entity_type: text
+value::client_brand: text
+value::user_locale: text
+value::clientside_locale: text
+value::open_inventory_title: text
+value::open_inventory_type: text
+value::open_inventory_custom_id: text
+value::gamemode: text
+value::last_damage_cause: text
+value::potion_effects: potion[]
+value::vehicle: text
+value::passengers: text[]
+value::lead_holder: text
+value::attached_leads: text[]
+value::targeted_entity: text
+value::player_ender_pearls: text[27]
+value::spawn_reason: text
+value::main_hand: text
+value::pose: text
+value::current_input_list: text[27]
+value::chat_visibility: text
+value::particle_visibility: text
+value::projectile_owner_uuid: text
+value::display_entity_translation: vector
+value::display_entity_left_rotation: vector
+value::display_entity_right_rotation: vector
+value::display_entity_scale: vector
+value::entity_pathfinder_points: location[27]
+value::event_block: location
+value::event_block_face: text
+value::event_block_type: text
+value::event_blocks_involved: location[]
+value::event_interaction: text
+value::event_from_location: location
+value::event_new_location: location
+value::event_damage: number
+value::event_final_damage: number
+value::event_damage_cause: text
+value::event_knockback_event_type: text
+value::event_knockback_cause: text
+value::event_knockback_vector: vector
+value::event_velocity: vector
+value::event_chat_message: text
+value::event_message: text
+value::event_custom_click_key: text
+value::event_custom_click_dialog_view_data: any
+value::event_death_screen_message: text
+value::event_heal_amount: number
+value::event_heal_cause: text
+value::event_exhaustion_amount: number
+value::event_exhaustion_reason: text
+value::event_new_potion_effect: potion
+value::event_power: number
+value::event_item: item
+value::event_items: item[27]
+value::event_old_item: item
+value::event_equipment_slot: text
+value::event_slot: number
+value::event_hotbar_slot: number
+value::event_added_items: map<number, item>
+value::event_old_equipments: map<text, item>
+value::event_new_equipments: map<text, item>
+value::event_slot_type: text
+value::event_close_inventory_cause: text
+value::event_inventory_click_type: text
+value::event_inventory_action: text
+value::event_drag_type: text
+value::event_slots_involved: number[]
+value::event_fish_state: text
+value::event_new_fishing_hook_state: text
+value::event_tree_type: text
+value::event_experience: number
+value::event_hanging_break_cause: text
+value::event_entity_unleash_reason: text
+value::event_time_skip_reason: text
+value::event_time_skip_amount: number
+value::event_food_level: number
+value::event_item_cooldown: number
+value::event_item_cooldown_group: text
+value::event_item_damage: number
+value::event_combust_duration: number
+value::event_combust_reason: text
+value::event_projectile_item: item
+value::event_teleport_cause: text
+value::event_block_break_progress: number
+value::event_ticks_held_for: number
+value::event_query_info: text
+value::event_advancement_tab_name: text
+value::event_gamemode: text
+value::event_sign_lines: text[27]
+value::event_sign_side: text
+value::event_old_vault_state: text
+value::event_new_vault_state: text
+value::event_anvil_rename_input: text
+value::event_anvil_damage_state: text
+value::event_enchantment_hint: text
+value::event_enchantments_to_add: map<text, number>
+value::event_enchantment_level_hint: number
+value::event_enchantment_offers: text[27]
+value::event_enchantment_bonus: number
+value::event_input_list: text[27]
+value::event_fail_move_reason: text
+value::event_transformed_entities: text[27]
+value::event_transform_reason: text
+value::event_replaced_block: text
+value::url_response: text
+value::url_response_code: number
+value::response_headers: map<text, any>
+value::url: text
+value::currency_transaction_reason: text
+value::currency_transaction_amount: text
+value::currency_transaction_result: text
+value::anticheat_check: text
+value::anticheat_violations: number
+value::players: number
+value::cpu_usage: number
+value::particle_cpu_usage: number
+value::server_tps: number
+value::timestamp: number
+value::server_current_tick: number
+value::selection_size: number
+value::selection_target_names: text[]
+value::selection_target_uuids: text[]
+value::world_time: number
+value::world_game_time: number
+value::world_weather: text
+value::world_clear_weather_duration: number
+value::world_weather_duration: number
+value::world_thunder_duration: number
+value::world_moon_phase: text
+value::owner_uuid: text
+value::world_size: number
+value::world_id: text
+value::all_players_names: text[27]
+value::all_players_uuids: text[27]
+value::all_entities_names: text[27]
+value::all_entities_uuids: text[27]
+value::start_reload_tick: number
+value::delay_reload_count: number
+value::server_stopped_time: number
+value::action_count_per_tick: number
+
+## factories (аргументы — только литералы, ? — необязательный)
+location(x: number, y: number, z: number, yaw: number?, pitch: number?)  [фабрика, только литералы]
+item(id: text, name: text?, count: number?, lore: text[20]?, nbt: text?)  [фабрика, только литералы]
+sound(sound: text, volume: number?, pitch: number?, variation: text?, source: text?)  [фабрика, только литералы]
+vector(x: number, y: number, z: number)  [фабрика, только литералы]
+particle(particle: text, count: number?, spread_x: number?, spread_y: number?, motion_x: number?, motion_y: number?, motion_z: number?, material: text?, color: text?, size: number?)  [фабрика, только литералы]
+potion(potion: text, amplifier: number?, duration: number?)  [фабрика, только литералы]
+item_raw(item: text)  [фабрика, только литералы]
+text_raw(text: text, parsing: text?)  [фабрика, только литералы]
+number_raw(text: text)  [фабрика, только литералы]
+var_raw(name: text, scope: text)  [фабрика, только литералы]
+enum_raw(value: text)  [фабрика, только литералы]
+function_info(description: text[64]?, icon: item?, hidden: any?)  [фабрика, только литералы]
+
+## placeholders (внутри текста: "%victim% убит", "%var(x)")
+%player% %player_uuid% %entity% %entity_uuid% %uuid% %victim% %victim_uuid% %damager% %damager_uuid% %shooter% %shooter_uuid% %killer% %killer_uuid% %selected% %selected_uuid% %display_name% %space% %empty% %player_amount% %entity_count% %entity_amount% %global_online% %online% %time% %worlds% %damage% %random% %random_uuid%
+%var() %var_local() %var_save() %var_line() %length() %length_local() %length_save() %length_line() %index() %index_local() %index_save() %index_line() %entry() %entry_local() %entry_save() %entry_line() %val() %math()
+
+## events (event<name> { ... })
+player_join player_quit player_rejoin player_chat player_custom_click player_ask_gamemode_change player_open_advancements_tab player_close_advancements_menu player_request_stats player_skin_change player_currency_transaction player_anticheat_flag player_interact player_right_click player_left_click player_place_block player_break_block block_damage block_damage_abort player_block_break_progress_update player_shear_block player_pick_block player_sign_change player_structure_grow player_vault_change_state player_block_dispense_loot player_flowerpot_manipulate player_harvest_block player_query_block_info player_arm_swing player_right_click_entity player_right_click_player player_imbue_potion_cloud player_pickup_projectile player_pickup_experience player_tame_entity player_leash_entity player_unleash_entity player_pick_entity player_start_spectating_entity player_stop_spectating_entity player_toggle_entity_age_lock player_feed_sulfur_cube_item player_query_entity_info player_open_inventory player_click_inventory player_drag_inventory player_click_own_inventory player_craft_item player_close_inventory player_swap_hands player_equipment_changed player_change_slot player_pick_item player_furnace_extract player_item_mend player_enchant_item player_anvil_rename_input player_anvil_damaged player_item_cooldown player_item_group_cooldown player_prepare_result player_prepare_item_craft player_prepare_item_enchant player_inventory_slot_change player_shot_bow player_launch_projectile player_pickup_item player_drop_item player_consume_item player_break_item player_damage_item player_stop_using_item player_edit_book player_fish player_move player_location_change player_rotate player_fail_move player_load_crossbow player_jump player_sneak player_unsneak player_teleport player_start_sprint player_stop_sprint player_start_flight player_stop_flight player_start_gliding player_stop_gliding player_riptide player_dismount player_horse_jump player_vehicle_jump player_vehicle_move player_input_event player_take_damage player_damage_player entity_damage_player player_damage_entity player_knockback player_velocity player_resurrect player_heal player_food_level_change player_exhaustion player_projectile_hit projectile_damage_player player_pre_attack_entity elder_guardian_appears_at_player player_combust player_death player_kill_player player_kill_mob mob_kill_player player_respawn entity_spawn entity_removed_from_world entity_damage_entity entity_kill_entity entity_take_damage entity_knockback entity_heal entity_resurrect entity_death entity_spell_cast entity_teleport enderman_escape enderman_attack_player firework_explode hanging_break entity_combust projectile_launch projectile_damage_entity projectile_kill_entity projectile_hit projective_collide entity_drop_item entity_pickup_item item_despawn item_merge experience_orb_merge entity_equipment_changed vehicle_take_damage block_fall falling_block_land entity_interact dispenser_shear_sheep sheep_regrow_wool witch_throw_potion fishing_hook_state_change entity_shot_bow entity_load_crossbow piglin_barter goat_ram_entity entity_transform entity_start_gliding entity_stop_gliding entity_bell_ring block_form_by_entity entity_block_break_progress_update entity_explode entity_explosion entity_unleash_event hopper_pickup_item world_start world_stop world_reload time_skip world_web_response world_web_exception block_ignite block_burn block_fade tnt_prime block_explode block_piston_extend block_piston_retract leaves_decay structure_grow block_grow block_flow block_fertilize redstone_level_change brew_complete block_form block_spread portal_create bell_ring note_play dispenser_dispense_item block_failed_dispense dispenser_equip_armor beacon_activate beacon_deactivate fluid_level_change sponge_absorb block_break_block moisture_change sculk_bloom item_moved_into_container vault_display_item vault_change_state block_dispense_loot crafter_craft furnace_smelt furnace_start_smelt furnace_burn chunk_load chunk_unload
